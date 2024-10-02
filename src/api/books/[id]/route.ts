@@ -22,7 +22,7 @@ export async function GET(
     .select('*')
     .eq('id', params.id)
     .eq('user_id', session.user.id)
-    .single();
+    .maybeSingle();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

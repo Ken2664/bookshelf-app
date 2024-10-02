@@ -17,7 +17,8 @@
     "next": "14.2.13",
     "react": "^18",
     "react-dom": "^18",
-    "sse.js": "^2.5.0"
+    "sse.js": "^2.5.0",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",

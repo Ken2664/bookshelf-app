@@ -18,7 +18,7 @@ export default function BookDetailPage({ params }: { params: { id: string } }) {
         .from('books')
         .select('*')
         .eq('id', params.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         setError(error.message);

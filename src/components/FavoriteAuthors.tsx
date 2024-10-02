@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { FavoriteAuthor } from '../types';
 import { useBooks } from '../hooks/useBooks';
 import { useAuth } from '../hooks/useAuth';
 

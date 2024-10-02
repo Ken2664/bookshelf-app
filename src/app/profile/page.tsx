@@ -28,7 +28,7 @@ const ProfilePage: React.FC = () => {
     });
 
     if (error) {
-      console.error('Error updating profile:', error);
+      console.error('Error updating or inserting profile:', error);
     } else {
       router.push('/my-page');
     }

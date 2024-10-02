@@ -19,8 +19,10 @@ export const useLoans = () => {
 
     if (error) {
       console.error('Error fetching loans:', error);
-    } else {
-      setLoans(data || []);
+    } else if (Array.isArray(data)) {
+      setLoans([...data as Loan[], ...loans]);
+    } else if (data) {
+      setLoans([data as Loan, ...loans]);
     }
     setLoading(false);
   };
@@ -29,14 +31,14 @@ export const useLoans = () => {
     const { data, error } = await supabase
       .from('loans')
       .insert([{ ...loan, user_id: user?.id }])
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error adding loan:', error);
-    } else {
+    } else if (data) {
       setLoans([data, ...loans]);
     }
-    return data;
+    return data || null;
   };
 
   const updateLoan = async (id: string, returnDate: string) => {
@@ -44,19 +46,19 @@ export const useLoans = () => {
       .from('loans')
       .update({ return_date: returnDate })
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error updating loan:', error);
     } else {
-      setLoans(loans.map(loan => loan.id === id ? data : loan));
+      setLoans(loans.map(loan => loan.id === id ? data : loan).filter((loan): loan is Loan => loan !== null));
     }
     return data;
   };
 
   useEffect(() => {
     fetchLoans();
-  }, [user]);
+  }, [fetchLoans]);
 
   return { loans, loading, addLoan, updateLoan, fetchLoans };
 };

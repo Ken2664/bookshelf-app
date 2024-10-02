@@ -2,78 +2,98 @@ import React, { useState } from 'react';
 import { useBooks } from '../hooks/useBooks';
 import RatingStars from './RatingStars';
 import TagInput from './TagInput';
-import { Tag } from '../types';
+import { Tag, Book } from '../types';
 import { useAuth } from '../hooks/useAuth';
 
+type BookFormData = Omit<Book, 'id' | 'user_id' | 'status' | 'favorite' | 'BookTag'>;
+
 const BookForm: React.FC = () => {
-  const { addBook } = useBooks();
-  const [title, setTitle] = useState<string>('');
-  const [author, setAuthor] = useState<string>('');
-  const [publisher, setPublisher] = useState<string>('');
-  const [rating, setRating] = useState<number>(0);
-  const [comment, setComment] = useState<string>('');
-  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const { addBook, assignTagToBook } = useBooks();
   const { user } = useAuth();
+  const [formData, setFormData] = useState<BookFormData>({
+    title: '',
+    author: '',
+    publisher: '',
+    rating: 0,
+    comment: '',
+    bookTag: [], // ここで book_tags を追加
+  });
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
-    
-    const newBook = await addBook({
-      user_id: user.id,
-      title,
-      author,
-      publisher,
-      rating,
-      comment,
-      status: 'unread',
-      favorite: false,
-    });
-
-    // タグの割り当ては別の関数で行う
-    if (newBook) {
-      await Promise.all(selectedTags.map(tag => assignTagToBook(newBook.id, tag.id)));
+    if (!user) {
+      console.error("User not authenticated");
+      return;
     }
+    
+    try {
+      const newBook = await addBook({
+        ...formData,
+        user_id: user.id,
+        status: 'unread',
+        favorite: false,
+        bookTag: [], // ここで book_tags を追加
+      });
 
-    // フォームをリセット
-    setTitle('');
-    setAuthor('');
-    setPublisher('');
-    setRating(0);
-    setComment('');
-    setSelectedTags([]);
+      if (newBook) {
+        await Promise.all(selectedTags.map(tag => assignTagToBook(newBook.id, tag.id)));
+        
+        // フォームをリセット
+        setFormData({
+          title: '',
+          author: '',
+          publisher: '',
+          rating: 0,
+          comment: '',
+          bookTag: [], // ここで book_tags を追加
+        });
+        setSelectedTags([]);
+      }
+    } catch (error) {
+      console.error("Error adding book:", error);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <input
         type="text"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        name="title"
+        value={formData.title}
+        onChange={handleChange}
         placeholder="タイトル"
         required
         className="w-full p-2 border rounded"
       />
       <input
         type="text"
-        value={author}
-        onChange={(e) => setAuthor(e.target.value)}
+        name="author"
+        value={formData.author}
+        onChange={handleChange}
         placeholder="著者"
         required
         className="w-full p-2 border rounded"
       />
       <input
         type="text"
-        value={publisher}
-        onChange={(e) => setPublisher(e.target.value)}
+        name="publisher"
+        value={formData.publisher}
+        onChange={handleChange}
         placeholder="出版社"
         required
         className="w-full p-2 border rounded"
       />
-      <RatingStars rating={rating} setRating={setRating} />
+      <RatingStars rating={formData.rating} setRating={(rating) => setFormData(prev => ({ ...prev, rating }))} />
       <textarea
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
+        name="comment"
+        value={formData.comment}
+        onChange={handleChange}
         placeholder="コメント（最大100文字）"
         maxLength={100}
         className="w-full p-2 border rounded"

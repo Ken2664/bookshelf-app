@@ -1,61 +1,78 @@
-import { useState, useEffect } from 'react';
-import { Book, Tag, BookTag, FavoriteAuthor, BookStatus } from '../types';
+import { useState, useEffect, useCallback } from 'react';
+import { Book, BookTag, FavoriteAuthor, BookStatus } from '../types';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 
 export const useBooks = () => {
-  const { user } = useAuth();
-  const user_id = user?.id || '';
+  const { user, loading: authLoading } = useAuth();
 
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [favoriteAuthors, setFavoriteAuthors] = useState<FavoriteAuthor[]>([]);
 
-  useEffect(() => {
-    if (user_id) {
-      fetchBooks();
-      fetchFavoriteAuthors();
-    }
-  }, [user_id]);
-
-  const fetchBooks = async () => {
+  const fetchBooks = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
     const { data, error } = await supabase
-      .from('Book')
+      .from('books')
       .select(`
         *,
-        BookTag (
+        book_tags (
           id,
           book_id,
           tag_id,
-          Tag (
+          user_id,
+          tags (
             id,
             name,
             user_id
           )
         )
       `)
-      .eq('user_id', user_id)
+      .eq('user_id', user.id)
       .order('title', { ascending: true });
 
     if (error) {
       console.error('Error fetching books:', error);
     } else if (data) {
-      const booksWithTags = data.map((book: Book & { BookTag: BookTag[] }) => ({
+      const booksWithTags = data.map((book: Book & { book_tags: BookTag[] }) => ({
         ...book,
-        tags: book.BookTag?.map((bt: BookTag) => bt.Tag) || [],
+        tags: book.book_tags?.map((bt: BookTag) => bt.tag) || [],
       }));
       setBooks(booksWithTags);
     }
     setLoading(false);
-  };
+  }, [user]);
 
-  const addBook = async (book: Omit<Book, 'id' | 'BookTag'>): Promise<Book | null> => {
+  const fetchFavoriteAuthors = useCallback(async () => {
+    if (!user) return;
     const { data, error } = await supabase
-      .from('Book')
-      .insert(book)
+      .from('favorite_authors')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('author_name', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching favorite authors:', error);
+    } else if (data) {
+      setFavoriteAuthors(data);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      fetchBooks();
+      fetchFavoriteAuthors();
+    }
+  }, [authLoading, user, fetchBooks, fetchFavoriteAuthors]);
+
+  const addBook = async (book: Omit<Book, 'id' | 'book_tags'>): Promise<Book | null> => {
+    if (!user) return null;
+    const { data, error } = await supabase
+      .from('books')
+      .insert({ ...book, user_id: user.id })
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error adding book:', error);
@@ -68,12 +85,14 @@ export const useBooks = () => {
   };
 
   const updateBook = async (id: string, updatedFields: Partial<Book>) => {
+    if (!user) return null;
     const { data, error } = await supabase
-      .from('Book')
+      .from('books')
       .update(updatedFields)
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error updating book:', error);
@@ -84,10 +103,12 @@ export const useBooks = () => {
   };
 
   const deleteBook = async (id: string) => {
+    if (!user) return;
     const { error } = await supabase
-      .from('Book')
+      .from('books')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', user.id);
 
     if (error) {
       console.error('Error deleting book:', error);
@@ -97,35 +118,23 @@ export const useBooks = () => {
   };
 
   const assignTagToBook = async (bookId: string, tagId: string) => {
+    if (!user) return;
     const { error } = await supabase
-      .from('BookTag')
-      .insert({ book_id: bookId, tag_id: tagId });
+      .from('book_tags')
+      .insert({ book_id: bookId, tag_id: tagId, user_id: user.id });
 
     if (error) {
       console.error('Error assigning tag to book:', error);
     }
   };
 
-  const fetchFavoriteAuthors = async () => {
-    const { data, error } = await supabase
-      .from('FavoriteAuthor')
-      .select('*')
-      .eq('user_id', user_id)
-      .order('author_name', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching favorite authors:', error);
-    } else if (data) {
-      setFavoriteAuthors(data);
-    }
-  };
-
   const addFavoriteAuthor = async (author_name: string) => {
+    if (!user) return null;
     const { data, error } = await supabase
-      .from('FavoriteAuthor')
-      .insert({ user_id, author_name })
+      .from('favorite_authors')
+      .insert({ user_id: user.id, author_name })
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error adding favorite author:', error);
@@ -136,10 +145,12 @@ export const useBooks = () => {
   };
 
   const removeFavoriteAuthor = async (id: string) => {
+    if (!user) return;
     const { error } = await supabase
-      .from('FavoriteAuthor')
+      .from('favorite_authors')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', user.id);
 
     if (error) {
       console.error('Error removing favorite author:', error);
@@ -149,12 +160,14 @@ export const useBooks = () => {
   };
 
   const updateBookStatus = async (id: string, status: BookStatus) => {
+    if (!user) return null;
     const { data, error } = await supabase
-      .from('Book')
+      .from('books')
       .update({ status })
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error updating book status:', error);
@@ -166,7 +179,7 @@ export const useBooks = () => {
 
   return {
     books,
-    loading,
+    loading: authLoading || loading,
     addBook,
     updateBook,
     deleteBook,

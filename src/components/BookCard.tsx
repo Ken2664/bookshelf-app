@@ -49,9 +49,9 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
       </div>
 
       <div className="mt-2 flex flex-wrap gap-2">
-        {book.BookTag && book.BookTag.map((bookTag: BookTag) => (
+        {book.bookTag && book.bookTag.map((bookTag: BookTag) => (
           <span key={bookTag.id} className="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-sm">
-            {bookTag.Tag?.name || 'Unknown Tag'}
+            {bookTag.tag?.name || 'Unknown Tag'}
           </span>
         ))}
       </div>

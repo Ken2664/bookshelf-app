@@ -6,7 +6,7 @@ import BookCard from '@/components/BookCard';
 import Link from 'next/link';
 import SearchBar from '@/components/SearchBar';
 import { useState } from 'react';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Book, BookStatus } from '@/types';
 
 export default function BooksPage() {
@@ -20,12 +20,16 @@ export default function BooksPage() {
     setIsSearching(true);
     setSearchError(null);
     try {
-      const response = await axios.get('/api/search', {
+      const response = await axios.get<Book[]>('/api/search', {
         params: { title, author },
       });
       setFilteredBooks(response.data);
-    } catch (err: any) {
-      setSearchError(err.response?.data?.error || '検索に失敗しました');
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        setSearchError(err.response?.data?.error || '検索に失敗しました');
+      } else {
+        setSearchError('予期せぬエラーが発生しました');
+      }
     } finally {
       setIsSearching(false);
     }

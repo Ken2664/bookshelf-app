@@ -1,25 +1,30 @@
 import React, { useState } from 'react';
 import { useLoans } from '@/hooks/useLoans';
 import { useBooks } from '@/hooks/useBooks';
+import { useAuth } from '@/hooks/useAuth';
 
 const LoanForm: React.FC = () => {
   const { addLoan } = useLoans();
   const { books } = useBooks();
+  const { user } = useAuth();
   const [bookId, setBookId] = useState('');
   const [borrowerName, setBorrowerName] = useState('');
   const [loanDate, setLoanDate] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addLoan({
-      book_id: bookId,
-      borrower_name: borrowerName,
-      loan_date: loanDate,
-      return_date: null,
-    });
-    setBookId('');
-    setBorrowerName('');
-    setLoanDate('');
+    if (user) {
+      await addLoan({
+        book_id: bookId,
+        borrower_name: borrowerName,
+        loan_date: loanDate,
+        return_date: null,
+        user_id: user.id,
+      });
+      setBookId('');
+      setBorrowerName('');
+      setLoanDate('');
+    }
   };
 
   return (
