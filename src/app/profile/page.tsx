@@ -5,36 +5,99 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import AuthGuard from '@/components/AuthGuard';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 const ProfilePage: React.FC = () => {
   const { user } = useAuth();
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
-      setUsername(user.user_metadata?.username || '');
-      setBio(user.user_metadata?.bio || '');
-    }
+    const fetchUserData = async () => {
+      if (user) {
+        try {
+          console.log('Fetching user data...');
+          const { data, error } = await supabase
+            .from('users')
+            .select('username, bio')
+            .eq('user_id', user.id)
+            .single();
+
+          if (error) {
+            if (error.code === 'PGRST116') {
+              console.log('User not found in users table. Will create on submit.');
+            } else {
+              throw error;
+            }
+          }
+
+          if (data) {
+            console.log('User data fetched:', data);
+            setUsername(data.username || '');
+            setBio(data.bio || '');
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          toast.error('ユーザー情報の取得に失敗しました');
+        }
+      }
+    };
+
+    fetchUserData();
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
-    const { error } = await supabase.auth.updateUser({
-      data: { username, bio }
-    });
+    if (!username.trim()) {
+      toast.error('ユーザーネームを入力してください');
+      return;
+    }
 
-    if (error) {
-      console.error('Error updating or inserting profile:', error);
-    } else {
-      router.push('/my-page');
+    setIsSubmitting(true);
+    console.log('Submitting profile update...');
+
+    try {
+      console.log('Upserting user data...');
+      const { data, error } = await supabase
+        .from('users')
+        .upsert({ 
+          user_id: user.id, 
+          username, 
+          bio
+        }, { 
+          onConflict: 'user_id'
+        });
+
+      if (error) throw error;
+      console.log('User data upserted successfully');
+
+      toast.success('プロフィールが更新されました');
+      await router.push('/my-page');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      if (error instanceof Error) {
+        if (error.message.includes('42501')) {
+          toast.error('RLSポリシー違反: プロフィールの更新権限がありません。管理者に連絡してください。');
+          console.error('RLS Policy Violation. Check your RLS policies and ensure the user has the correct permissions.');
+        } else if (error.message.includes('23505')) {
+          toast.error('このユーザーネームは既に使用されています。別のユーザーネームを選択してください。');
+        } else {
+          toast.error(`プロフィールの更新に失敗しました: ${error.message}`);
+        }
+      } else {
+        toast.error('不明なエラーが発生しました');
+      }
+    } finally {
+      setIsSubmitting(false);
+      console.log('Profile update process completed');
     }
   };
 
-  if (!user) return null;
+  if (!user) return <div>ログインしてください</div>;
 
   return (
     <AuthGuard>
@@ -51,6 +114,7 @@ const ProfilePage: React.FC = () => {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              required
             />
           </div>
           <div className="mb-6">
@@ -67,10 +131,11 @@ const ProfilePage: React.FC = () => {
           </div>
           <div className="flex items-center justify-between">
             <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               type="submit"
+              disabled={isSubmitting}
             >
-              保存
+              {isSubmitting ? '保存中...' : '保存'}
             </button>
           </div>
         </form>

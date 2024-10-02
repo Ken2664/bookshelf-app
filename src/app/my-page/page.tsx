@@ -3,12 +3,14 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useBooks } from '@/hooks/useBooks';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import AuthGuard from '@/components/AuthGuard';
 import Link from 'next/link';
 
 const MyPage: React.FC = () => {
   const { user } = useAuth();
   const { books } = useBooks();
+  const { profile, loading, error } = useUserProfile();
 
   if (!user) return null;
 
@@ -19,7 +21,8 @@ const MyPage: React.FC = () => {
         <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
           <h2 className="text-xl font-semibold mb-2">ユーザー情報</h2>
           <p><strong>メールアドレス:</strong> {user.email}</p>
-          <p><strong>ユーザーネーム:</strong> {user.user_metadata?.username || '未設定'}</p>
+          <p><strong>ユーザーネーム:</strong> {loading ? '読み込み中...' : (profile?.username || '未設定')}</p>
+          {error && <p className="text-red-500">ユーザー情報の取得に失敗しました</p>}
           <p><strong>登録した本の総数:</strong> {books.length}</p>
           <Link href="/profile" className="text-blue-500 hover:underline">
             プロフィールを編集
@@ -31,7 +34,6 @@ const MyPage: React.FC = () => {
           <p><strong>読書中の本:</strong> {books.filter(book => book.status === 'reading').length}</p>
           <p><strong>未読の本:</strong> {books.filter(book => book.status === 'unread').length}</p>
         </div>
-        {/* 手順10の新作アナウンス機能のためのプレースホルダー */}
         <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
           <h2 className="text-xl font-semibold mb-2">新作アナウンス</h2>
           <p>この機能は近日公開予定です。</p>
