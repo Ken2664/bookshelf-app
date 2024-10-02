@@ -14,7 +14,7 @@ export const useAuth = () => {
       setSession(session);
       if (session?.user) {
         const { data: userMetadata } = await supabase
-          .from('users')
+          .from(' users')
           .select('*')
           .eq('id', session.user.id)
           .single();

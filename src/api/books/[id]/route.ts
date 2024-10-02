@@ -1,18 +1,27 @@
-import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
-import { Book } from '@/types';
+import { NextRequest, NextResponse } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { Database } from '@/types';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
-  const user = supabase.auth.user();
-  if (!user) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const supabase = createRouteHandlerClient<Database>({ cookies });
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const { data, error } = await supabase
-    .from<Book>('books')
+    .from('books')
     .select('*')
     .eq('id', params.id)
-    .eq('user_id', user.id)
+    .eq('user_id', session.user.id)
     .single();
 
   if (error) {
