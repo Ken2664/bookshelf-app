@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Tag } from '../types';
-import { useBooks } from '../hooks/useBooks';
 
 interface TagInputProps {
   selectedTags: Tag[];
@@ -8,18 +7,28 @@ interface TagInputProps {
 }
 
 const TagInput: React.FC<TagInputProps> = ({ selectedTags, setSelectedTags }) => {
-  const { addTag, fetchTags } = useBooks();
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [newTag, setNewTag] = useState<string>('');
 
+  const addTag = async (tagName: string) => {
+    // ここでタグを追加するロジックを実装
+    // 例: Supabaseを使用してタグをデータベースに追加
+    // 追加後、allTagsステートを更新
+  };
+
   useEffect(() => {
-    fetchTags().then(setAllTags);
-  }, [fetchTags]);
+    const fetchTags = async () => {
+      // ここでタグを取得するロジックを実装
+      // 例: const tags = await supabase.from('tags').select('*');
+      // setAllTags(tags);
+    };
+    fetchTags();
+  }, []);
 
   const handleAddTag = async () => {
     if (newTag.trim() === '') return;
-    const createdTag = await addTag({ name: newTag });
-    if (createdTag) {
+    const createdTag = await addTag(newTag);
+    if (createdTag !== undefined) {
       setAllTags([...allTags, createdTag]);
       setNewTag('');
     }
