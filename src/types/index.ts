@@ -11,7 +11,7 @@ export interface Book {
   comment: string;
   status: BookStatus;
   favorite: boolean;
-  bookTag: BookTag[];
+  book_tags: BookTag[];
 }
 
 export interface User {

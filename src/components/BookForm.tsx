@@ -4,19 +4,22 @@ import RatingStars from './RatingStars';
 import TagInput from './TagInput';
 import { Tag, Book } from '../types';
 import { useAuth } from '../hooks/useAuth';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 type BookFormData = Omit<Book, 'id' | 'user_id' | 'status' | 'favorite' | 'BookTag'>;
 
 const BookForm: React.FC = () => {
   const { addBook, assignTagToBook } = useBooks();
   const { user } = useAuth();
+  const router = useRouter();
   const [formData, setFormData] = useState<BookFormData>({
     title: '',
     author: '',
     publisher: '',
     rating: 0,
     comment: '',
-    bookTag: [], // ここで book_tags を追加
+    bookTag: [],
   });
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
 
@@ -28,20 +31,27 @@ const BookForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      console.error("User not authenticated");
+      console.error("ユーザーが認証されていません");
       return;
     }
     
     try {
-      const newBook = await addBook({
-        ...formData,
-        user_id: user.id,
-        status: 'unread',
-        favorite: false,
-        bookTag: [], // ここで book_tags を追加
-      });
+      const { data, error } = await supabase
+        .from('books')
+        .insert([
+          {
+            ...formData,
+            user_id: user.id,
+            status: 'unread',
+            favorite: false,
+          }
+        ])
+        .select();
 
-      if (newBook) {
+      if (error) throw error;
+
+      if (data && data[0]) {
+        const newBook = data[0] as Book;
         await Promise.all(selectedTags.map(tag => assignTagToBook(newBook.id, tag.id)));
         
         // フォームをリセット
@@ -51,12 +61,15 @@ const BookForm: React.FC = () => {
           publisher: '',
           rating: 0,
           comment: '',
-          bookTag: [], // ここで book_tags を追加
+          bookTag: [],
         });
         setSelectedTags([]);
+
+        // app/booksにリダイレクト
+        router.push('/books');
       }
     } catch (error) {
-      console.error("Error adding book:", error);
+      console.error("本の追加中にエラーが発生しました:", error);
     }
   };
 
