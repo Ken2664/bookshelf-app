@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Book, BookStatus, Tag } from '@/types';
 import { useBooks } from '@/hooks/useBooks';
 import RatingStars from './RatingStars';
@@ -10,26 +10,64 @@ interface BookCardProps {
   book: Book;
 }
 
-const BookCard: React.FC<BookCardProps> = ({ book }) => {
+const BookCard: React.FC<BookCardProps> = ({ book: initialBook }) => {
   const { updateBook, updateBookStatus } = useBooks();
+  const [book, setBook] = useState<Book>(initialBook);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [rating, setRating] = useState<number>(book.rating);
-  const [comment, setComment] = useState<string>(book.comment);
-  const [isFavorite, setIsFavorite] = useState<boolean>(book.favorite);
+  const [rating, setRating] = useState<number>(initialBook.rating);
+  const [comment, setComment] = useState<string>(initialBook.comment);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleSave = () => {
-    updateBook(book.id, { rating, comment, favorite: isFavorite });
-    setIsEditing(false);
+  useEffect(() => {
+    setBook(initialBook);
+    setRating(initialBook.rating);
+    setComment(initialBook.comment);
+    setIsLoading(false);
+  }, [initialBook]);
+
+  const handleSave = async () => {
+    console.log('Saving book:', book.id, { rating, comment, favorite: book.favorite });
+    const updatedBook = await updateBook(book.id, { rating, comment, favorite: book.favorite });
+    if (updatedBook) {
+      console.log('Book updated successfully:', updatedBook);
+      setBook(updatedBook);
+      setIsEditing(false);
+    } else {
+      console.error('Failed to update book');
+    }
   };
 
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    updateBook(book.id, { favorite: !isFavorite });
+  const toggleFavorite = async () => {
+    const newFavoriteStatus = !book.favorite;
+    console.log('Toggling favorite status:', book.id, newFavoriteStatus);
+    const updatedBook = await updateBook(book.id, { favorite: newFavoriteStatus });
+    if (updatedBook) {
+      console.log('Favorite status updated successfully:', updatedBook);
+      setBook(updatedBook);
+    } else {
+      console.error('Failed to update favorite status');
+    }
   };
 
-  const handleStatusChange = (newStatus: BookStatus) => {
-    updateBookStatus(book.id, newStatus);
+  const handleStatusChange = async (newStatus: BookStatus) => {
+    console.log('Changing book status:', book.id, newStatus);
+    // 即座にUIを更新
+    setBook(prevBook => ({ ...prevBook, status: newStatus }));
+    
+    const updatedBook = await updateBookStatus(book.id, newStatus);
+    if (updatedBook) {
+      console.log('Book status updated successfully:', updatedBook);
+      setBook(updatedBook);
+    } else {
+      console.error('Failed to update book status');
+      // 更新に失敗した場合、元の状態に戻す
+      setBook(prevBook => ({ ...prevBook, status: book.status }));
+    }
   };
+
+  if (isLoading || !book) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="border p-4 rounded shadow">
@@ -40,7 +78,7 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
           <p className="text-gray-600">出版社: {book.publisher}</p>
         </div>
         <button onClick={toggleFavorite} className="mt-2">
-          {isFavorite ? (
+          {book.favorite ? (
             <SolidHeartIcon className="w-6 h-6 text-red-500" />
           ) : (
             <OutlineHeartIcon className="w-6 h-6 text-gray-500" />

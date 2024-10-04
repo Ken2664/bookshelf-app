@@ -100,21 +100,33 @@ export const useBooks = () => {
   };
 
   const updateBook = async (id: string, updatedFields: Partial<Book>) => {
-    if (!user) return null;
+    if (!user) {
+      console.error('User not authenticated');
+      return null;
+    }
+  
+    console.log('Updating book:', id, updatedFields, 'User ID:', user.id);
+  
     const { data, error } = await supabase
       .from('books')
       .update(updatedFields)
       .eq('id', id)
       .eq('user_id', user.id)
-      .select()
-      .maybeSingle();
+      .select();
 
     if (error) {
       console.error('Error updating book:', error);
-    } else if (data) {
-      setBooks(prevBooks => prevBooks.map(book => (book.id === id ? data : book)));
+      return null;
     }
-    return data;
+  
+    if (!data || data.length === 0) {
+      console.error('No book found with the given id:', id, 'for user:', user.id);
+      return null;
+    }
+
+    const updatedBook = data[0];
+    setBooks(prevBooks => prevBooks.map(book => (book.id === id ? updatedBook : book)));
+    return updatedBook;
   };
 
   const deleteBook = async (id: string) => {
@@ -174,7 +186,7 @@ export const useBooks = () => {
     }
   };
 
-  const updateBookStatus = async (id: string, status: BookStatus) => {
+  const updateBookStatus = async (id: string, status: BookStatus): Promise<Book | null> => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('books')
@@ -182,14 +194,16 @@ export const useBooks = () => {
       .eq('id', id)
       .eq('user_id', user.id)
       .select()
-      .maybeSingle();
+      .single();
 
     if (error) {
       console.error('Error updating book status:', error);
+      return null;
     } else if (data) {
-      setBooks(prevBooks => prevBooks.map(book => book.id === id ? { ...book, status } : book));
+      setBooks(prevBooks => prevBooks.map(book => book.id === id ? data : book));
+      return data;
     }
-    return data;
+    return null;
   };
 
   const searchBooks = useCallback(async (title: string, author: string) => {
