@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Book, BookTag, FavoriteAuthor, BookStatus } from '../types';
+import { Book, BookTag, FavoriteAuthor, BookStatus, Tag } from '../types';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 
@@ -66,19 +66,33 @@ export const useBooks = () => {
     }
   }, [authLoading, user, fetchBooks, fetchFavoriteAuthors]);
 
-  const addBook = async (book: Omit<Book, 'id' | 'book_tags'>): Promise<Book | null> => {
+  const addBook = async (book: Omit<Book, 'id' | 'book_tags'>, tags: Tag[]): Promise<Book | null> => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('books')
       .insert({ ...book, user_id: user.id })
       .select()
-      .maybeSingle();
+      .single();
 
     if (error) {
       console.error('Error adding book:', error);
       return null;
     } else if (data) {
-      setBooks(prevBooks => [...prevBooks, data]);
+      // タグを本に関連付ける
+      const bookTags = tags.map(tag => ({
+        book_id: data.id,
+        tag_id: tag.id,
+        user_id: user.id
+      }));
+      const { error: tagError } = await supabase
+        .from('book_tags')
+        .insert(bookTags);
+
+      if (tagError) {
+        console.error('Error assigning tags to book:', tagError);
+      }
+
+      setBooks(prevBooks => [...prevBooks, { ...data, book_tags: bookTags }]);
       return data;
     }
     return null;

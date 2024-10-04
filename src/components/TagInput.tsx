@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tag } from '../types';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
 
 interface TagInputProps {
   selectedTags: Tag[];
@@ -9,26 +11,44 @@ interface TagInputProps {
 const TagInput: React.FC<TagInputProps> = ({ selectedTags, setSelectedTags }) => {
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [newTag, setNewTag] = useState<string>('');
+  const { user } = useAuth();
 
   const addTag = async (tagName: string) => {
-    // ここでタグを追加するロジックを実装
-    // 例: Supabaseを使用してタグをデータベースに追加
-    // 追加後、allTagsステートを更新
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('tags')
+      .insert({ name: tagName, user_id: user.id })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding tag:', error);
+      return;
+    }
+    return data;
   };
 
   useEffect(() => {
     const fetchTags = async () => {
-      // ここでタグを取得するロジックを実装
-      // 例: const tags = await supabase.from('tags').select('*');
-      // setAllTags(tags);
+      if (!user) return;
+      const { data, error } = await supabase
+        .from('tags')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error fetching tags:', error);
+      } else if (data) {
+        setAllTags(data);
+      }
     };
     fetchTags();
-  }, []);
+  }, [user]);
 
   const handleAddTag = async () => {
     if (newTag.trim() === '') return;
     const createdTag = await addTag(newTag);
-    if (createdTag !== undefined) {
+    if (createdTag) {
       setAllTags([...allTags, createdTag]);
       setNewTag('');
     }

@@ -42,8 +42,8 @@ export interface FavoriteAuthor {
 }
 
 export interface Loan {
-  user_id: string;
   id: string;
+  user_id: string;
   book_id: string;
   borrower_name: string;
   loan_date: string;
@@ -54,32 +54,32 @@ export interface Loan {
 export interface Database {
   public: {
     Tables: {
-      Book: {
+      books: {
         Row: Book;
-        Insert: Omit<Book, 'id'>;
-        Update: Partial<Book>;
+        Insert: Omit<Book, 'id' | 'book_tags'>;
+        Update: Partial<Omit<Book, 'book_tags'>>;
       };
-      User: {
+      users: {
         Row: User;
         Insert: Omit<User, 'id'>;
         Update: Partial<User>;
       };
-      Tag: {
+      tags: {
         Row: Tag;
         Insert: Omit<Tag, 'id'>;
         Update: Partial<Tag>;
       };
-      BookTag: {
+      book_tags: {
         Row: BookTag;
         Insert: Omit<BookTag, 'id'>;
         Update: Partial<BookTag>;
       };
-      FavoriteAuthor: {
+      favorite_authors: {
         Row: FavoriteAuthor;
         Insert: Omit<FavoriteAuthor, 'id'>;
         Update: Partial<FavoriteAuthor>;
       };
-      Loan: {
+      loans: {
         Row: Loan;
         Insert: Omit<Loan, 'id'>;
         Update: Partial<Loan>;
