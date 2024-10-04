@@ -6,7 +6,7 @@ import { Tag, Book } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import { useRouter } from 'next/navigation';
 
-type BookFormData = Omit<Book, 'id' | 'user_id' | 'status' | 'favorite' | 'book_tags'>;
+type BookFormData = Omit<Book, 'id' | 'user_id' | 'status' | 'favorite' | 'book_tags' | 'created_at' | 'updated_at'>;
 
 const BookForm: React.FC = () => {
   const { addBook } = useBooks();
@@ -37,8 +37,10 @@ const BookForm: React.FC = () => {
       const newBook = await addBook({
         ...formData,
         user_id: user.id,
-        status: 'unread', // デフォルトのステータス
-        favorite: false, // デフォルトのお気に入り状態
+        status: 'unread' as const,
+        favorite: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }, selectedTags);
       if (newBook) {
         // フォームをリセット

@@ -12,7 +12,6 @@ export const useBooks = () => {
   const [searchResults, setSearchResults] = useState<Book[]>([]);
 
   const fetchBooks = useCallback(async () => {
-    if (!user) return;
     setLoading(true);
     const { data, error } = await supabase
       .from('books')
@@ -20,27 +19,17 @@ export const useBooks = () => {
         *,
         book_tags (
           id,
-          book_id,
           tag_id,
-          user_id,
-          tags (
-            id,
-            name,
-            user_id
-          )
+          tag:tags (id, name)
         )
       `)
-      .eq('user_id', user.id)
-      .order('title', { ascending: true });
+      .eq('user_id', user?.id);
 
     if (error) {
       console.error('Error fetching books:', error);
-    } else if (data) {
-      const booksWithTags = data.map((book: Book & { book_tags: BookTag[] }) => ({
-        ...book,
-        tags: book.book_tags?.map((bt: BookTag) => bt.tag) || [],
-      }));
-      setBooks(booksWithTags);
+      setBooks([]);
+    } else {
+      setBooks(data || []);
     }
     setLoading(false);
   }, [user]);
@@ -220,14 +209,7 @@ export const useBooks = () => {
         *,
         book_tags (
           id,
-          book_id,
-          tag_id,
-          user_id,
-          tags (
-            id,
-            name,
-            user_id
-          )
+          tag:tags (id, name)
         )
       `)
       .eq('user_id', user.id);
@@ -247,11 +229,7 @@ export const useBooks = () => {
         throw error;
       } else if (data) {
         console.log(`検索結果: ${data.length}件の本が見つかりました`);
-        const booksWithTags = data.map((book: Book & { book_tags: BookTag[] }) => ({
-          ...book,
-          tags: book.book_tags?.map((bt: BookTag) => bt.tag) || [],
-        }));
-        setSearchResults(booksWithTags);
+        setSearchResults(data);
       } else {
         console.log('検索結果: 本が見つかりませんでした');
         setSearchResults([]);

@@ -11,6 +11,8 @@ export interface Book {
   comment: string;
   status: BookStatus;
   favorite: boolean;
+  created_at: string;
+  updated_at: string;
   book_tags: BookTag[];
 }
 
@@ -31,8 +33,8 @@ export interface BookTag {
   id: string;
   book_id: string;
   tag_id: string;
-  tag: Tag;
   user_id: string;
+  tag: Tag;
 }
 
 export interface FavoriteAuthor {
