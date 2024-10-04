@@ -9,6 +9,7 @@ export const useBooks = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [favoriteAuthors, setFavoriteAuthors] = useState<FavoriteAuthor[]>([]);
+  const [searchResults, setSearchResults] = useState<Book[]>([]);
 
   const fetchBooks = useCallback(async () => {
     if (!user) return;
@@ -191,6 +192,63 @@ export const useBooks = () => {
     return data;
   };
 
+  const searchBooks = useCallback(async (title: string, author: string) => {
+    if (!user) {
+      console.error('検索エラー: ユーザーが認証されていません');
+      return;
+    }
+    setLoading(true);
+    console.log(`検索開始: タイトル "${title}", 著者 "${author}"`);
+
+    let query = supabase
+      .from('books')
+      .select(`
+        *,
+        book_tags (
+          id,
+          book_id,
+          tag_id,
+          user_id,
+          tags (
+            id,
+            name,
+            user_id
+          )
+        )
+      `)
+      .eq('user_id', user.id);
+
+    if (title) {
+      query = query.ilike('title', `%${title}%`);
+    }
+    if (author) {
+      query = query.ilike('author', `%${author}%`);
+    }
+
+    try {
+      const { data, error } = await query.order('title', { ascending: true });
+
+      if (error) {
+        console.error('本の検索中にエラーが発生しました:', error);
+        throw error;
+      } else if (data) {
+        console.log(`検索結果: ${data.length}件の本が見つかりました`);
+        const booksWithTags = data.map((book: Book & { book_tags: BookTag[] }) => ({
+          ...book,
+          tags: book.book_tags?.map((bt: BookTag) => bt.tag) || [],
+        }));
+        setSearchResults(booksWithTags);
+      } else {
+        console.log('検索結果: 本が見つかりませんでした');
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error('検索中に予期せぬエラーが発生しました:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   return {
     books,
     loading: authLoading || loading,
@@ -203,5 +261,7 @@ export const useBooks = () => {
     addFavoriteAuthor,
     removeFavoriteAuthor,
     updateBookStatus,
+    searchResults,
+    searchBooks,
   };
 };

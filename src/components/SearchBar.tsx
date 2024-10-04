@@ -1,18 +1,24 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useBooks } from '../hooks/useBooks';
+import { useRouter } from 'next/navigation';
 
-interface SearchBarProps {
-  onSearch: (title: string, author: string) => void;
-}
-
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
+const SearchBar: React.FC = () => {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
+  const { searchBooks, loading } = useBooks();
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(title, author);
+    console.log('検索フォーム送信:', { title, author });
+    try {
+      await searchBooks(title, author);
+      router.push(`/search-results?title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}`);
+    } catch (error) {
+      console.error('検索中にエラーが発生しました:', error);
+    }
   };
 
   return (
@@ -35,8 +41,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           placeholder="著者名で検索"
         />
       </div>
-      <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded">
-        検索
+      <button 
+        type="submit" 
+        className="px-4 py-2 bg-blue-500 text-white rounded"
+        disabled={loading}
+      >
+        {loading ? '検索中...' : '検索'}
       </button>
     </form>
   );
