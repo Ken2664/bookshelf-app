@@ -17,9 +17,14 @@ export default function BooksPage() {
       <div className="p-6">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">本の一覧</h1>
-          <Link href="/books/add" className="px-4 py-2 bg-blue-500 text-white rounded">
-            本を追加
-          </Link>
+          <div>
+            <Link href="/books/add" className="px-4 py-2 bg-blue-500 text-white rounded mr-2">
+              本を追加
+            </Link>
+            <Link href="/books/camera-add" className="px-4 py-2 bg-green-500 text-white rounded">
+              カメラで追加
+            </Link>
+          </div>
         </div>
         <SearchBar />
         {loading && <p>読み込み中...</p>}
