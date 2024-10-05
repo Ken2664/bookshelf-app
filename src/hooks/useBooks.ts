@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Book, BookTag, FavoriteAuthor, BookStatus, Tag } from '../types';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
@@ -10,8 +10,10 @@ export const useBooks = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [favoriteAuthors, setFavoriteAuthors] = useState<FavoriteAuthor[]>([]);
   const [searchResults, setSearchResults] = useState<Book[]>([]);
+  const initialFetchDone = useRef(false);
 
   const fetchBooks = useCallback(async () => {
+    if (!user || initialFetchDone.current) return;
     setLoading(true);
     const { data, error } = await supabase
       .from('books')
@@ -23,7 +25,7 @@ export const useBooks = () => {
           tag:tags (id, name)
         )
       `)
-      .eq('user_id', user?.id);
+      .eq('user_id', user.id);
 
     if (error) {
       console.error('Error fetching books:', error);
@@ -32,6 +34,7 @@ export const useBooks = () => {
       setBooks(data || []);
     }
     setLoading(false);
+    initialFetchDone.current = true;
   }, [user]);
 
   const fetchFavoriteAuthors = useCallback(async () => {
@@ -50,7 +53,7 @@ export const useBooks = () => {
   }, [user]);
 
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading && user && !initialFetchDone.current) {
       fetchBooks();
       fetchFavoriteAuthors();
     }
@@ -195,21 +198,21 @@ export const useBooks = () => {
     return null;
   };
 
-  const searchBooks = useCallback(async (title: string, author: string) => {
+  const searchBooks = useCallback(async (title: string, author: string, tags: Tag[]) => {
     if (!user) {
       console.error('検索エラー: ユーザーが認証されていません');
       return;
     }
     setLoading(true);
-    console.log(`検索開始: タイトル "${title}", 著者 "${author}"`);
+    console.log(`検索開始: タイトル "${title}", 著者 "${author}", タグ ${tags.map(t => t.name).join(', ')}`);
 
     let query = supabase
       .from('books')
       .select(`
         *,
-        book_tags (
+        book_tags!inner (
           id,
-          tag:tags (id, name)
+          tag:tags!inner (id, name)
         )
       `)
       .eq('user_id', user.id);
@@ -220,6 +223,10 @@ export const useBooks = () => {
     if (author) {
       query = query.ilike('author', `%${author}%`);
     }
+    if (tags.length > 0) {
+      const tagIds = tags.map(tag => tag.id);
+      query = query.in('book_tags.tag.id', tagIds);
+    }
 
     try {
       const { data, error } = await query.order('title', { ascending: true });
@@ -229,7 +236,18 @@ export const useBooks = () => {
         throw error;
       } else if (data) {
         console.log(`検索結果: ${data.length}件の本が見つかりました`);
-        setSearchResults(data);
+        // タグでフィルタリングされた結果のみを返す
+        const filteredData = tags.length > 0
+          ? data.filter(book => book.book_tags.some((bt: any) => tags.some(t => t.id === bt.tag.id)))
+          : data;
+        
+        // タグの名前を含む形式に変換
+        const booksWithTagNames = filteredData.map(book => ({
+          ...book,
+          tags: book.book_tags.map((bt: any) => bt.tag.name)
+        }));
+        
+        setSearchResults(booksWithTagNames);
       } else {
         console.log('検索結果: 本が見つかりませんでした');
         setSearchResults([]);
