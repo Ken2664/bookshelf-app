@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useBooks } from '../hooks/useBooks';
 import RatingStars from './RatingStars';
 import TagInput from './TagInput';
 import { Tag, Book } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import { BookInfo } from '@/lib/dify';
 
 type BookFormData = Omit<Book, 'id' | 'user_id' | 'status' | 'favorite' | 'book_tags' | 'created_at' | 'updated_at'>;
 
-const BookForm: React.FC = () => {
+interface BookFormProps {
+  initialData?: BookInfo;
+}
+
+const BookForm: React.FC<BookFormProps> = ({ initialData }) => {
   const { addBook } = useBooks();
   const { user } = useAuth();
   const router = useRouter();
@@ -20,6 +25,18 @@ const BookForm: React.FC = () => {
     comment: '',
   });
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        title: initialData.title || '',
+        author: initialData.author || '',
+        publisher: initialData.publisher || '',
+        rating: 0,
+        comment: '',
+      });
+    }
+  }, [initialData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

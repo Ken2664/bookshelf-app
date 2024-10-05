@@ -4,17 +4,21 @@ import React, { useState } from 'react';
 import { useBooks } from '../hooks/useBooks';
 import { useRouter } from 'next/navigation';
 
-const SearchBar: React.FC = () => {
+interface SearchBarProps {
+  onSearch: (title: string, author: string) => Promise<void>;
+}
+
+const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
-  const { searchBooks, loading } = useBooks();
+  const { loading } = useBooks();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('検索フォーム送信:', { title, author });
     try {
-      await searchBooks(title, author);
+      await onSearch(title, author);
       router.push(`/search-results?title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}`);
     } catch (error) {
       console.error('検索中にエラーが発生しました:', error);
