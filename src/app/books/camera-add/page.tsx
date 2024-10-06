@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import CameraCapture from '@/components/CameraCapture';
-import { recognizeBook } from '@/lib/dify';
 import { useBooks } from '@/hooks/useBooks';
+import { useAuth } from '@/hooks/useAuth'; // 追加
 import { Book, BookStatus } from '@/types';
 import RatingStars from '@/components/RatingStars';
 import BookStatusSelect from '@/components/BookStatusSelect';
+import Image from 'next/image';
+import axios from 'axios';
 
 export default function CameraAddBookPage() {
   const [bookInfo, setBookInfo] = useState<Partial<Book>>({
@@ -22,22 +24,45 @@ export default function CameraAddBookPage() {
   const [loading, setLoading] = useState(false);
   const { addBook } = useBooks();
   const router = useRouter();
+  const [captureMethod, setCaptureMethod] = useState<'camera' | 'upload' | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const { user } = useAuth(); // 追加
 
   const handleCapture = async (imageBase64: string) => {
     setLoading(true);
     try {
-      const recognizedInfo = await recognizeBook(imageBase64);
+      const response = await axios.post('/api/books/recognize', { image: imageBase64 });
+      const recognizedInfo = response.data;
       setBookInfo(prevInfo => ({
         ...prevInfo,
-        title: recognizedInfo.title,
-        author: recognizedInfo.author,
-        publisher: recognizedInfo.publisher,
+        title: recognizedInfo.title || '',
+        author: recognizedInfo.author || '',
+        publisher: recognizedInfo.publisher || '',
       }));
     } catch (error) {
       console.error('本の認識に失敗しました:', error);
-      alert('本の認識に失敗しました。もう一度お試しください。');
+      if (axios.isAxiosError(error)) {
+        console.error('Response data:', error.response?.data);
+        console.error('Response status:', error.response?.status);
+        alert(`本の認識に失敗しました: ${JSON.stringify(error.response?.data) || error.message}`);
+      } else {
+        alert('本の認識に失敗しました。もう一度お試しください。');
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setPreviewImage(base64String);
+        handleCapture(base64String.split(',')[1]); // Base64エンコードされたデータ部分のみを送信
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -55,10 +80,16 @@ export default function CameraAddBookPage() {
   };
 
   const handleSave = async () => {
+    if (!user) {
+      alert('ユーザーが認証されていません。ログインしてください。');
+      return;
+    }
+
     try {
       await addBook({
         ...bookInfo,
         favorite: false,
+        user_id: user.id,
       }, []);
       router.push('/books');
     } catch (error) {
@@ -70,9 +101,45 @@ export default function CameraAddBookPage() {
   return (
     <AuthGuard>
       <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">カメラで本を追加</h1>
-        <CameraCapture onCapture={handleCapture} />
+        <h1 className="text-2xl font-bold mb-4">カメラまたは画像アップロードで本を追加</h1>
+        
+        {!captureMethod && (
+          <div className="flex space-x-4 mb-4">
+            <button
+              onClick={() => setCaptureMethod('camera')}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              カメラを使用
+            </button>
+            <button
+              onClick={() => setCaptureMethod('upload')}
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              画像をアップロード
+            </button>
+          </div>
+        )}
+
+        {captureMethod === 'camera' && <CameraCapture onCapture={handleCapture} />}
+
+        {captureMethod === 'upload' && (
+          <div className="mb-4">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="mb-2"
+            />
+            {previewImage && (
+              <div className="mt-2">
+                <Image src={previewImage} alt="プレビュー" width={200} height={200} />
+              </div>
+            )}
+          </div>
+        )}
+
         {loading && <p className="mt-4">本の情報を認識中...</p>}
+
         {bookInfo.title && (
           <div className="mt-4">
             <h2 className="text-xl font-semibold mb-2">本の情報</h2>

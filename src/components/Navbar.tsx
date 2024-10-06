@@ -31,6 +31,7 @@ export default function Navbar() {
     <nav className="flex items-center justify-between p-4 bg-blue-600">
       <Link href="/" className="text-white text-lg font-bold">Bookshelf App</Link>
       <div>
+        <Link href="/authors/add" className="mr-4 text-white">お気に入り作家</Link>
         <Link href="/books" className="mr-4 text-white">本の管理</Link>
         <Link href="/my-page" className="mr-4 text-white">マイページ</Link>
         <Link href="/loans" className="mr-4 text-white">貸し借り管理</Link>

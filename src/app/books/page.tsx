@@ -22,7 +22,7 @@ export default function BooksPage() {
               本を追加
             </Link>
             <Link href="/books/camera-add" className="px-4 py-2 bg-green-500 text-white rounded">
-              カメラで追加
+              画像から追加
             </Link>
           </div>
         </div>

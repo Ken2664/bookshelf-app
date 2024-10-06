@@ -38,6 +38,7 @@ const MyPage: React.FC = () => {
           <h2 className="text-xl font-semibold mb-2">新作アナウンス</h2>
           <p>この機能は近日公開予定です。</p>
         </div>
+        
       </div>
     </AuthGuard>
   );
