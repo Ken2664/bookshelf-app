@@ -11,7 +11,12 @@ interface TagInputProps {
 const TagInput: React.FC<TagInputProps> = ({ selectedTags, setSelectedTags }) => {
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [newTag, setNewTag] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [visibleTags, setVisibleTags] = useState<Tag[]>([]);
+  const [showAllTags, setShowAllTags] = useState<boolean>(false);
   const { user } = useAuth();
+
+  const TAGS_PER_PAGE = 20;
 
   const addTag = async (tagName: string) => {
     if (!user) return;
@@ -37,13 +42,20 @@ const TagInput: React.FC<TagInputProps> = ({ selectedTags, setSelectedTags }) =>
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error fetching tags:', error);
+        console.error('タグの取得中にエラーが発生しました:', error);
       } else if (data) {
         setAllTags(data);
       }
     };
     fetchTags();
   }, [user]);
+
+  useEffect(() => {
+    const filteredTags = allTags.filter(tag =>
+      tag.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setVisibleTags(showAllTags ? filteredTags : filteredTags.slice(0, TAGS_PER_PAGE));
+  }, [allTags, searchQuery, showAllTags]);
 
   const handleAddTag = async () => {
     if (newTag.trim() === '') return;
@@ -80,8 +92,15 @@ const TagInput: React.FC<TagInputProps> = ({ selectedTags, setSelectedTags }) =>
           追加
         </button>
       </div>
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="タグを検索"
+        className="w-full p-2 border rounded"
+      />
       <div className="flex flex-wrap gap-2">
-        {allTags.map(tag => (
+        {visibleTags.map(tag => (
           <span
             key={tag.id}
             onClick={() => toggleTag(tag)}
@@ -95,6 +114,14 @@ const TagInput: React.FC<TagInputProps> = ({ selectedTags, setSelectedTags }) =>
           </span>
         ))}
       </div>
+      {!showAllTags && allTags.length > TAGS_PER_PAGE && (
+        <button
+          onClick={() => setShowAllTags(true)}
+          className="mt-2 text-blue-500 hover:underline"
+        >
+          もっと見る
+        </button>
+      )}
     </div>
   );
 };
