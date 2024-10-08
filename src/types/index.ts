@@ -14,6 +14,7 @@ export interface Book {
   created_at: string;
   updated_at: string;
   book_tags: BookTag[];
+  cover_image?: string;
 }
 
 export interface User {

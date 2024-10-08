@@ -5,12 +5,23 @@ import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import CameraCapture from '@/components/CameraCapture';
 import { useBooks } from '@/hooks/useBooks';
-import { useAuth } from '@/hooks/useAuth'; // 追加
+import { useAuth } from '@/hooks/useAuth';
 import { Book, BookStatus } from '@/types';
 import RatingStars from '@/components/RatingStars';
 import BookStatusSelect from '@/components/BookStatusSelect';
 import Image from 'next/image';
 import axios from 'axios';
+
+function dataURItoBlob(dataURI: string): Blob {
+  const byteString = atob(dataURI.split(',')[1]);
+  const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+  return new Blob([ab], { type: mimeString });
+}
 
 export default function CameraAddBookPage() {
   const [bookInfo, setBookInfo] = useState<Partial<Book>>({
@@ -20,31 +31,42 @@ export default function CameraAddBookPage() {
     rating: 0,
     status: 'unread' as BookStatus,
     comment: '',
+    cover_image: '',
   });
   const [loading, setLoading] = useState(false);
   const { addBook } = useBooks();
   const router = useRouter();
   const [captureMethod, setCaptureMethod] = useState<'camera' | 'upload' | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const { user } = useAuth(); // 追加
+  const { user } = useAuth();
 
   const handleCapture = async (imageBase64: string) => {
     setLoading(true);
     try {
-      const response = await axios.post('/api/books/recognize', { image: imageBase64 });
-      const recognizedInfo = response.data;
+      const formData = new FormData();
+      formData.append('image', dataURItoBlob(imageBase64), 'image.jpg');
+
+      const response = await axios.post('/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      const { bookInfo: recognizedInfo, coverUrl } = response.data;
       setBookInfo(prevInfo => ({
         ...prevInfo,
         title: recognizedInfo.title || '',
         author: recognizedInfo.author || '',
         publisher: recognizedInfo.publisher || '',
+        cover_image: coverUrl,
       }));
+      setPreviewImage(coverUrl);
     } catch (error) {
       console.error('本の認識に失敗しました:', error);
       if (axios.isAxiosError(error)) {
         console.error('Response data:', error.response?.data);
         console.error('Response status:', error.response?.status);
-        alert(`本の認識に失敗しました: ${JSON.stringify(error.response?.data) || error.message}`);
+        alert(`本の認識に失敗しました: ${error.response?.data?.error || error.message}`);
+      } else if (error instanceof Error) {
+        alert(`本の認識に失敗しました: ${error.message}`);
       } else {
         alert('本の認識に失敗しました。もう一度お試しください。');
       }
@@ -60,7 +82,7 @@ export default function CameraAddBookPage() {
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setPreviewImage(base64String);
-        handleCapture(base64String.split(',')[1]); // Base64エンコードされたデータ部分のみを送信
+        handleCapture(base64String);
       };
       reader.readAsDataURL(file);
     }
@@ -85,12 +107,27 @@ export default function CameraAddBookPage() {
       return;
     }
 
+    if (!bookInfo.title) {
+      alert('タイトルは必須です。');
+      return;
+    }
+
     try {
-      await addBook({
-        ...bookInfo,
+      const newBook: Omit<Book, 'id' | 'book_tags'> = {
+        title: bookInfo.title,
+        author: bookInfo.author || '',
+        publisher: bookInfo.publisher || '',
+        rating: bookInfo.rating || 0,
+        status: bookInfo.status || 'unread',
+        comment: bookInfo.comment || '',
+        cover_image: bookInfo.cover_image || '',
         favorite: false,
         user_id: user.id,
-      }, []);
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      await addBook(newBook, []); // 空の配列をタグ用の2つ目の引数として追加
       router.push('/books');
     } catch (error) {
       console.error('本の保存に失敗しました:', error);
@@ -151,6 +188,7 @@ export default function CameraAddBookPage() {
                 onChange={handleInputChange}
                 placeholder="タイトル"
                 className="w-full p-2 border rounded"
+                required
               />
               <input
                 type="text"
@@ -170,11 +208,14 @@ export default function CameraAddBookPage() {
               />
               <div>
                 <label className="block text-sm font-medium text-gray-700">評価</label>
-                <RatingStars rating={bookInfo.rating} setRating={handleRatingChange} />
+                <RatingStars rating={bookInfo.rating || 0} setRating={handleRatingChange} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">進捗状況</label>
-                <BookStatusSelect status={bookInfo.status} onChange={handleStatusChange} />
+                <BookStatusSelect 
+                  status={bookInfo.status || 'unread'} 
+                  onStatusChange={handleStatusChange} 
+                />
               </div>
               <textarea
                 name="comment"

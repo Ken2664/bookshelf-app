@@ -7,8 +7,22 @@ export interface BookInfo {
 }
 
 interface DifyResponse {
-  answer: string;
-  // 他の必要なレスポンスフィールドがあれば追加してください
+  workflow_run_id: string;
+  task_id: string;
+  data: {
+    id: string;
+    workflow_id: string;
+    status: string;
+    outputs: {
+      text?: string;
+    };
+    error: string | null;
+    elapsed_time: number;
+    total_tokens: number;
+    total_steps: number;
+    created_at: number;
+    finished_at: number;
+  };
 }
 
 interface DifyPayload {
@@ -20,39 +34,56 @@ interface DifyPayload {
   files: Array<{
     type: string;
     transfer_method: string;
-    url?: string;
-    data?: string;
+    url: string;
   }>;
 }
 
-export const runDifyWorkflow = async (imageBase64: string): Promise<BookInfo> => {
-  const url = 'https://api.dify.ai/v1/chat-messages';
+export const runDifyWorkflow = async (imageUrl: string): Promise<BookInfo> => {
+  const url = 'https://api.dify.ai/v1/workflows/run';
   const headers = {
     'Authorization': `Bearer ${process.env.NEXT_PUBLIC_DIFY_API_KEY}`,
     'Content-Type': 'application/json'
   };
 
-  const payload: DifyPayload = {
-    inputs: {},
-    query: "",  // クエリは空
-    response_mode: "blocking",
-    conversation_id: "",
-    user: process.env.NEXT_PUBLIC_DIFY_USER_ID || '',
-    files: [
-      {
-        type: "image",
-        transfer_method: "base64",
-        data: imageBase64
-      }
-    ]
-  };
-
-  console.log('Dify API Request Payload:', JSON.stringify(payload, null, 2));
-
   try {
+    const payload: DifyPayload = {
+      inputs: {},
+      query: "",
+      response_mode: "blocking",
+      conversation_id: "",
+      user: process.env.NEXT_PUBLIC_DIFY_USER_ID || '',
+      files: [
+        {
+          type: "image",
+          transfer_method: "remote_url",
+          url: imageUrl
+        }
+      ]
+    };
+
+    console.log('Sending request to Dify API:', JSON.stringify(payload));
     const response = await axios.post<DifyResponse>(url, payload, { headers });
-    console.log('Dify API Response:', response.data);
-    const bookInfo: BookInfo = JSON.parse(response.data.answer);
+    console.log('Dify API response:', JSON.stringify(response.data, null, 2));
+    
+    // レスポンスの解析を改善
+    let bookInfo: BookInfo;
+    const outputText = response.data.data?.outputs?.text;
+    if (outputText) {
+      try {
+        bookInfo = JSON.parse(outputText);
+      } catch (parseError) {
+        console.error('Failed to parse Dify response:', outputText);
+        bookInfo = {
+          title: outputText,
+          author: '',
+          publisher: ''
+        };
+      }
+    } else {
+      console.error('Unexpected Dify response format:', response.data);
+      throw new Error('Dify APIからの応答が不正な形式です');
+    }
+    
     return bookInfo;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -61,6 +92,9 @@ export const runDifyWorkflow = async (imageBase64: string): Promise<BookInfo> =>
       throw new Error(`Dify API error: ${axiosError.response?.status} ${JSON.stringify(axiosError.response?.data)}`);
     }
     console.error('Unexpected error:', error);
-    throw new Error('An unexpected error occurred while processing the book information');
+    if (error instanceof Error) {
+      throw new Error(`本の情報の処理中に予期せぬエラーが発生しました: ${error.message}`);
+    }
+    throw new Error('本の情報の処理中に予期せぬエラーが発生しました');
   }
 };

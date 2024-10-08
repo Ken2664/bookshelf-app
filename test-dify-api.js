@@ -15,7 +15,7 @@ async function testDifyAPI() {
         user: "user-1234567890",
         files: [{
             type: "image",
-            transfer_method: "base64",
+            transfer_method: "remote_url",
             url: "https://m.media-amazon.com/images/I/91QkTL0yQAL._SY522_.jpg"
         }]
     };
