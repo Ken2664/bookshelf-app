@@ -6,9 +6,10 @@ import AuthGuard from '@/components/AuthGuard';
 import CameraCapture from '@/components/CameraCapture';
 import { useBooks } from '@/hooks/useBooks';
 import { useAuth } from '@/hooks/useAuth';
-import { Book, BookStatus } from '@/types';
+import { Book, BookStatus, Tag } from '@/types';
 import RatingStars from '@/components/RatingStars';
 import BookStatusSelect from '@/components/BookStatusSelect';
+import TagInput from '@/components/TagInput';
 import Image from 'next/image';
 import axios from 'axios';
 
@@ -33,6 +34,7 @@ export default function CameraAddBookPage() {
     comment: '',
     cover_image: '',
   });
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(false);
   const { addBook } = useBooks();
   const router = useRouter();
@@ -113,22 +115,26 @@ export default function CameraAddBookPage() {
     }
 
     try {
-      const newBook: Omit<Book, 'id' | 'book_tags'> = {
+      const newBook: Omit<Book, 'id' | 'book_tags' | 'cover_image'> = {
         title: bookInfo.title,
         author: bookInfo.author || '',
         publisher: bookInfo.publisher || '',
         rating: bookInfo.rating || 0,
         status: bookInfo.status || 'unread',
         comment: bookInfo.comment || '',
-        cover_image: bookInfo.cover_image || '',
         favorite: false,
         user_id: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
-      await addBook(newBook, []); // 空の配列をタグ用の2つ目の引数として追加
-      router.push('/books');
+      const addedBook = await addBook(newBook, selectedTags);
+      if (addedBook) {
+        console.log('本が正常に追加されました:', addedBook);
+        router.push('/books');
+      } else {
+        throw new Error('本の追加に失敗しました');
+      }
     } catch (error) {
       console.error('本の保存に失敗しました:', error);
       alert('本の保存に失敗しました。もう一度お試しください。');
@@ -225,6 +231,13 @@ export default function CameraAddBookPage() {
                 className="w-full p-2 border rounded"
                 rows={3}
               />
+              <div>
+                <label className="block text-sm font-medium text-gray-700">タグ</label>
+                <TagInput
+                  selectedTags={selectedTags}
+                  setSelectedTags={setSelectedTags}
+                />
+              </div>
             </div>
             <button
               onClick={handleSave}

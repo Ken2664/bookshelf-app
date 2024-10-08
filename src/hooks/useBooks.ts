@@ -59,36 +59,40 @@ export const useBooks = () => {
     }
   }, [authLoading, user, fetchBooks, fetchFavoriteAuthors]);
 
-  const addBook = async (book: Omit<Book, 'id' | 'book_tags'>, tags: Tag[]): Promise<Book | null> => {
-    if (!user) return null;
-    const { data, error } = await supabase
-      .from('books')
-      .insert({ ...book, user_id: user.id })
-      .select()
-      .single();
+  const addBook = async (newBook: Omit<Book, 'id' | 'book_tags' | 'cover_image'>, tags: Tag[]) => {
+    try {
+      // 1. 本を追加
+      const { data: insertedBook, error: insertError } = await supabase
+        .from('books')
+        .insert([newBook])
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error adding book:', error);
-      return null;
-    } else if (data) {
-      // タグを本に関連付ける
-      const bookTags = tags.map(tag => ({
-        book_id: data.id,
-        tag_id: tag.id,
-        user_id: user.id
-      }));
-      const { error: tagError } = await supabase
-        .from('book_tags')
-        .insert(bookTags);
+      if (insertError) throw insertError;
 
-      if (tagError) {
-        console.error('Error assigning tags to book:', tagError);
+      // 2. タグを関連付け
+      if (insertedBook && tags.length > 0) {
+        const bookTags = tags.map(tag => ({
+          book_id: insertedBook.id,
+          tag_id: tag.id,
+          user_id: user?.id // ここでuser_idを追加
+        }));
+
+        const { error: tagError } = await supabase
+          .from('book_tags')
+          .insert(bookTags);
+
+        if (tagError) throw tagError;
       }
 
-      setBooks(prevBooks => [...prevBooks, { ...data, book_tags: bookTags }]);
-      return data;
+      // 3. 本のリストを更新
+      await fetchBooks();
+
+      return insertedBook;
+    } catch (error) {
+      console.error('本の追加に失敗しました:', error);
+      throw error;
     }
-    return null;
   };
 
   const updateBook = async (id: string, updatedFields: Partial<Book>) => {

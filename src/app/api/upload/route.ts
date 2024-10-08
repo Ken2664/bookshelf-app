@@ -1,34 +1,41 @@
-import { NextResponse } from 'next/server';
-import { uploadToCloudinary } from '../../../lib/cloudinary';
-import { runDifyWorkflow } from '../../../lib/dify';
+import { NextRequest, NextResponse } from 'next/server';
+import { uploadToCloudinary, deleteFromCloudinary, getPublicIdFromUrl } from '@/lib/cloudinary';
+import { runDifyWorkflow } from '@/lib/dify';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get('image') as File;
+    const image = formData.get('image') as File;
 
-    if (!file) {
-      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+    if (!image) {
+      return NextResponse.json({ error: '画像が提供されていません' }, { status: 400 });
     }
 
-    const buffer = await file.arrayBuffer();
-    const base64Image = Buffer.from(buffer).toString('base64');
-    const dataURI = `data:${file.type};base64,${base64Image}`;
+    const bytes = await image.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const dataURI = `data:${image.type};base64,${buffer.toString('base64')}`;
 
-    console.log('Uploading to Cloudinary...');
-    const cloudinaryUrl = await uploadToCloudinary(dataURI);
-    console.log('Cloudinary URL:', cloudinaryUrl);  // ここでCloudinaryのURLをコンソールに表示
+    const coverUrl = await uploadToCloudinary(dataURI);
 
-    console.log('Running Dify workflow...');
-    const bookInfo = await runDifyWorkflow(cloudinaryUrl);
-    console.log('Book info:', bookInfo);
+    try {
+      const bookInfo = await runDifyWorkflow(coverUrl);
 
-    return NextResponse.json({ bookInfo, coverUrl: cloudinaryUrl });
+      // Difyからのレスポンスを受け取った後、Cloudinaryの画像を削除
+      const publicId = getPublicIdFromUrl(coverUrl);
+      await deleteFromCloudinary(publicId);
+
+      return NextResponse.json({ bookInfo, coverUrl });
+    } catch (difyError) {
+      console.error('Dify APIエラー:', difyError);
+
+      // Difyでエラーが発生した場合も、Cloudinaryの画像を削除
+      const publicId = getPublicIdFromUrl(coverUrl);
+      await deleteFromCloudinary(publicId);
+
+      return NextResponse.json({ error: 'Dify APIエラー' }, { status: 500 });
+    }
   } catch (error) {
-    console.error('Error processing image:', error);
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-    return NextResponse.json({ error: 'Unknown error occurred' }, { status: 500 });
+    console.error('アップロードエラー:', error);
+    return NextResponse.json({ error: 'アップロードエラー' }, { status: 500 });
   }
 }

@@ -18,3 +18,23 @@ export const uploadToCloudinary = async (dataURI: string): Promise<string> => {
     throw new Error('Cloudinaryへのアップロードに失敗しました');
   }
 };
+
+// 新しい関数を追加
+export const deleteFromCloudinary = async (publicId: string): Promise<void> => {
+  try {
+    await cloudinary.uploader.destroy(publicId);
+  } catch (error) {
+    console.error('Cloudinaryからの画像削除に失敗しました:', error);
+    if (error instanceof Error) {
+      throw new Error(`Cloudinaryからの画像削除に失敗しました: ${error.message}`);
+    }
+    throw new Error('Cloudinaryからの画像削除に失敗しました');
+  }
+};
+
+// Cloudinary URLからpublic IDを抽出する関数
+export const getPublicIdFromUrl = (url: string): string => {
+  const parts = url.split('/');
+  const filename = parts[parts.length - 1];
+  return `book_covers/${filename.split('.')[0]}`;
+};
