@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLoans } from '@/hooks/useLoans';
 import { useBooks } from '@/hooks/useBooks';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,6 +10,31 @@ const LoanForm: React.FC = () => {
   const [bookId, setBookId] = useState('');
   const [borrowerName, setBorrowerName] = useState('');
   const [loanDate, setLoanDate] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredBooks, setFilteredBooks] = useState(books);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const filtered = books.filter(book => 
+      book.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredBooks(filtered);
+    setShowSuggestions(searchTerm !== '' && filtered.length > 0);
+  }, [searchTerm, books]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,19 +54,37 @@ const LoanForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <select
-        value={bookId}
-        onChange={(e) => setBookId(e.target.value)}
-        required
-        className="w-full p-2 border rounded"
-      >
-        <option value="">本を選択してください</option>
-        {books.map((book) => (
-          <option key={book.id} value={book.id}>
-            {book.title}
-          </option>
-        ))}
-      </select>
+      <div className="relative" ref={searchRef}>
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setBookId('');
+            setShowSuggestions(true);
+          }}
+          onFocus={() => setShowSuggestions(true)}
+          placeholder="本のタイトルを検索"
+          className="w-full p-2 border rounded"
+        />
+        {showSuggestions && (
+          <ul className="absolute z-10 w-full bg-white border rounded mt-1 max-h-60 overflow-y-auto">
+            {filteredBooks.map((book) => (
+              <li
+                key={book.id}
+                onClick={() => {
+                  setBookId(book.id);
+                  setSearchTerm(book.title);
+                  setShowSuggestions(false);
+                }}
+                className="p-2 hover:bg-gray-100 cursor-pointer"
+              >
+                {book.title}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
       <input
         type="text"
         value={borrowerName}
