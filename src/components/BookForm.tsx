@@ -7,8 +7,9 @@ import { useAuth } from '../hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
-type BookFormData = Omit<Book, 'id' | 'user_id' | 'status' | 'favorite' | 'book_tags' | 'created_at' | 'updated_at' | 'cover_image'>;
-
+type BookFormData = Omit<Book, 'id' | 'user_id' | 'status' | 'favorite' | 'book_tags' | 'created_at' | 'updated_at' | 'cover_image'> & {
+  cover_image?: string;
+};
 const BookForm: React.FC = () => {
   const { addBook } = useBooks();
   const { user } = useAuth();
@@ -73,15 +74,21 @@ const BookForm: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const newBook = await addBook({
+      const bookData = {
         ...formData,
         user_id: user.id,
         status: 'unread' as const,
         favorite: false,
-        cover_image: coverImageUrl,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      }, selectedTags);
+      };
+
+      // cover_imageがある場合のみ追加
+      if (coverImageUrl) {
+        bookData.cover_image = coverImageUrl;
+      }
+
+      const newBook = await addBook(bookData, selectedTags);
 
       if (newBook) {
         // フォームをリセット
