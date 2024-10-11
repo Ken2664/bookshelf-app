@@ -26,15 +26,20 @@ export const useLoans = () => {
   };
 
   const addLoan = async (loan: Omit<Loan, 'id'>) => {
-    const { data, error } = await supabase
-      .from('loans')
-      .insert([loan])
-      .select();
+    try {
+      const { data, error } = await supabase
+        .from('loans')
+        .insert([loan])
+        .select();
 
-    if (error) {
+      if (error) throw error;
+
+      if (data) {
+        setLoans([...loans, data[0]]);
+      }
+    } catch (error) {
       console.error('Error adding loan:', error);
-    } else if (data) {
-      setLoans([...loans, data[0]]);
+      throw error; // エラーを再スローして、呼び出し元で処理できるようにします
     }
   };
 

@@ -15,7 +15,7 @@ export default function RegisterPage() {
     if (error) {
       setError(error.message);
     } else {
-      router.push('/my-page'); // 認証成功後のリダイレクト
+      router.push('/profile'); // プロフィール編集画面へのリダイレクト
     }
   };
 

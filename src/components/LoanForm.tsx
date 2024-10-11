@@ -38,17 +38,26 @@ const LoanForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (user) {
-      await addLoan({
-        book_id: bookId,
-        borrower_name: borrowerName,
-        loan_date: loanDate,
-        return_date: null,
-        user_id: user.id,
-      });
-      setBookId('');
-      setBorrowerName('');
-      setLoanDate('');
+    if (user && bookId) {  // bookIdが空でないことを確認
+      try {
+        await addLoan({
+          book_id: bookId,
+          borrower_name: borrowerName,
+          loan_date: loanDate,
+          return_date: null,
+          user_id: user.id,
+        });
+        setBookId('');
+        setBorrowerName('');
+        setLoanDate('');
+        setSearchTerm('');  // 検索フィールドもクリア
+      } catch (error) {
+        console.error('Error adding loan:', error);
+        // ここでユーザーにエラーメッセージを表示することもできます
+      }
+    } else {
+      // bookIdが選択されていない場合、ユーザーに通知
+      alert('本を選択してください。');
     }
   };
 
@@ -100,7 +109,11 @@ const LoanForm: React.FC = () => {
         required
         className="w-full p-2 border rounded"
       />
-      <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded">
+      <button 
+        type="submit" 
+        className="w-full p-2 bg-blue-500 text-white rounded"
+        disabled={!bookId}  // bookIdが選択されていない場合、ボタンを無効化
+      >
         貸出を記録
       </button>
     </form>
