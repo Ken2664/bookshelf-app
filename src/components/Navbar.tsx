@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth'
 const navLinks = [
   { href: '/authors/add', label: 'お気に入り作家' },
   { href: '/books', label: '本の管理' },
+  { href: '/recommended-books', label: 'おすすめの本' },
   { href: '/my-page', label: 'マイページ' },
   { href: '/loans', label: '貸し借り管理' },
 ]
