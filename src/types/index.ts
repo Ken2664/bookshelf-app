@@ -17,6 +17,19 @@ export interface Book {
   cover_image?: string;
 }
 
+export interface RecommendedBook {
+  user_id: string;
+  book_id: string;
+  book_title: string;
+  book_author: string;
+  book_publisher: string;
+  last_updated: string;
+}
+export interface DisplayBook {
+  title: string;
+  author: string;
+  publisher: string;
+}
 export interface User {
   id: string;
   email: string;
@@ -86,6 +99,11 @@ export interface Database {
         Row: Loan;
         Insert: Omit<Loan, 'id'>;
         Update: Partial<Loan>;
+      };
+      recommended_books: {
+        Row: RecommendedBook;
+        Insert: Omit<RecommendedBook, 'user_id' | 'book_id' | 'last_updated'>;
+        Update: Partial<Omit<RecommendedBook, 'user_id' | 'book_id'>>;
       };
     };
   };
