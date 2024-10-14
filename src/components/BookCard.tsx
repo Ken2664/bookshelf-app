@@ -5,13 +5,15 @@ import RatingStars from './RatingStars';
 import BookStatusSelect from './BookStatusSelect';
 import { HeartIcon as SolidHeartIcon } from '@heroicons/react/24/solid';
 import { HeartIcon as OutlineHeartIcon } from '@heroicons/react/24/outline';
+import { TrashIcon } from '@heroicons/react/24/outline';
 
 interface BookCardProps {
   book: Book;
+  onDelete: (id: string) => void;
 }
 
-const BookCard: React.FC<BookCardProps> = ({ book: initialBook }) => {
-  const { updateBook, updateBookStatus } = useBooks();
+const BookCard: React.FC<BookCardProps> = ({ book: initialBook, onDelete }) => {
+  const { updateBook, updateBookStatus, deleteBook } = useBooks();
   const [book, setBook] = useState<Book>(initialBook);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [rating, setRating] = useState<number>(initialBook.rating);
@@ -65,6 +67,14 @@ const BookCard: React.FC<BookCardProps> = ({ book: initialBook }) => {
     }
   };
 
+  const handleDelete = async () => {
+    if (window.confirm('本当にこの本を削除しますか？')) {
+      console.log('Deleting book:', book.id);
+      await deleteBook(book.id);
+      onDelete(book.id);
+    }
+  };
+
   if (isLoading || !book) {
     return <div>Loading...</div>;
   }
@@ -77,13 +87,18 @@ const BookCard: React.FC<BookCardProps> = ({ book: initialBook }) => {
           <p className="text-gray-600">著者: {book.author}</p>
           <p className="text-gray-600">出版社: {book.publisher}</p>
         </div>
-        <button onClick={toggleFavorite} className="mt-2">
-          {book.favorite ? (
-            <SolidHeartIcon className="w-6 h-6 text-red-500" />
-          ) : (
-            <OutlineHeartIcon className="w-6 h-6 text-gray-500" />
-          )}
-        </button>
+        <div className="flex items-center">
+          <button onClick={toggleFavorite} className="mr-2">
+            {book.favorite ? (
+              <SolidHeartIcon className="w-6 h-6 text-red-500" />
+            ) : (
+              <OutlineHeartIcon className="w-6 h-6 text-gray-500" />
+            )}
+          </button>
+          <button onClick={handleDelete} className="text-red-500 hover:text-red-700">
+            <TrashIcon className="w-6 h-6" />
+          </button>
+        </div>
       </div>
 
       <div className="mt-2 flex flex-wrap gap-2">

@@ -134,7 +134,7 @@ export const useBooks = () => {
       .eq('user_id', user.id);
 
     if (error) {
-      console.error('Error deleting book:', error);
+      console.error('本の削除中にエラーが発生しました:', error);
     } else {
       setBooks(prevBooks => prevBooks.filter(book => book.id !== id));
     }
