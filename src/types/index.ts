@@ -18,12 +18,14 @@ export interface Book {
 }
 
 export interface RecommendedBook {
-  user_id: string;
-  book_id: string;
   book_title: string;
   book_author: string;
   book_publisher: string;
-  last_updated: string;
+  title?: string;
+  author?: string;
+  publisher?: string;
+  description?: string;
+  thumbnail?: string;
 }
 export interface DisplayBook {
   title: string;
