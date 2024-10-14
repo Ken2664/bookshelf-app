@@ -20,8 +20,12 @@ export async function fetchGoogleBooksInfo(title: string, author: string) {
       }
       const data = await response.json();
       
+      console.log('Google Books API response:', JSON.stringify(data, null, 2)); // 完全なレスポンスをログ出力
+
       if (data.items && data.items.length > 0) {
         const book = data.items[0].volumeInfo;
+        console.log('First book item:', JSON.stringify(book, null, 2)); // 最初の本の情報をログ出力
+
         return {
           title: book.title,
           author: book.authors ? book.authors.join(', ') : 'Unknown',
