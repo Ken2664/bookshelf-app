@@ -120,19 +120,6 @@ const BookForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="coverImage" className="block text-sm font-medium text-gray-700">
-          表紙画像
-        </label>
-        <input
-          type="file"
-          id="coverImage"
-          name="coverImage"
-          onChange={handleFileChange}
-          accept="image/*"
-          className="mt-1 block w-full"
-        />
-      </div>
 
       <div>
         <label htmlFor="title" className="block text-sm font-medium text-gray-700">

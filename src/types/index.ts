@@ -68,6 +68,17 @@ export interface Loan {
   return_date: string | null;
 }
 
+export interface Quote {
+  id: string;
+  user_id: string;
+  content: string;
+  author: string;
+  book_id: string;
+  page_number?: number;
+  created_at: string;
+  updated_at: string;
+}
+
 // Supabase用のDatabase型定義
 export interface Database {
   public: {
@@ -106,6 +117,11 @@ export interface Database {
         Row: RecommendedBook;
         Insert: Omit<RecommendedBook, 'user_id' | 'book_id' | 'last_updated'>;
         Update: Partial<Omit<RecommendedBook, 'user_id' | 'book_id'>>;
+      };
+      quotes: {
+        Row: Quote;
+        Insert: Omit<Quote, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Quote, 'id'>>;
       };
     };
   };

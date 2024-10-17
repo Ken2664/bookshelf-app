@@ -12,6 +12,7 @@ const navLinks = [
   { href: '/recommended-books', label: 'おすすめの本' },
   { href: '/my-page', label: 'マイページ' },
   { href: '/loans', label: '貸し借り管理' },
+  { href: '/quotes', label: 'セリフ管理' },
 ]
 
 function useRouteChange(callback: () => void) {
