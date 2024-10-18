@@ -9,6 +9,7 @@ export const useAuth = () => {
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('Initial user fetch:', user);
       setUser(user);
       setLoading(false);
     };
@@ -16,6 +17,7 @@ export const useAuth = () => {
     fetchUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session);
       setUser(session?.user ?? null);
       setLoading(false);
     });

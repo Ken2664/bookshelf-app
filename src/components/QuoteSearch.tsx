@@ -6,9 +6,10 @@ import { Database, Quote } from '../types';
 
 interface QuoteSearchProps {
   setSearchResults: React.Dispatch<React.SetStateAction<Quote[]>>;
+  onError: (error: string) => void;
 }
 
-const QuoteSearch: React.FC<QuoteSearchProps> = ({ setSearchResults }) => {
+const QuoteSearch: React.FC<QuoteSearchProps> = ({ setSearchResults, onError }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState<'content' | 'author' | 'book_title'>('content');
 
@@ -29,6 +30,7 @@ const QuoteSearch: React.FC<QuoteSearchProps> = ({ setSearchResults }) => {
 
     if (error) {
       console.error('検索エラー:', error);
+      onError(error.message);
       return;
     }
 

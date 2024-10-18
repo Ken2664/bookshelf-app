@@ -3,16 +3,21 @@ import { Quote } from '../types';
 
 interface QuoteListProps {
   quotes: Quote[];
+  onError: (error: string) => void;
 }
 
-const QuoteList: React.FC<QuoteListProps> = ({ quotes }) => {
+const QuoteList: React.FC<QuoteListProps> = ({ quotes, onError }) => {
+  if (!quotes) {
+    onError('引用が見つかりませんでした。');
+    return null;
+  }
+
   return (
-    <div className="space-y-4">
+    <div>
       {quotes.map((quote) => (
-        <div key={quote.id} className="border p-4 rounded shadow">
-          <p className="text-lg font-semibold">{quote.content}</p>
-          <p className="text-sm text-gray-600">著者: {quote.author}</p>
-          <p className="text-sm text-gray-600">ページ: {quote.page_number || '不明'}</p>
+        <div key={quote.id} className="mb-4 p-4 border rounded">
+          <p className="text-lg">"{quote.content}"</p>
+          <p className="text-right mt-2">- {quote.author}</p>
         </div>
       ))}
     </div>
