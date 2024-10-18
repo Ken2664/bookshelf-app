@@ -5,11 +5,11 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Database, Quote } from '../types';
 
 interface QuoteSearchProps {
-  setSearchResults: React.Dispatch<React.SetStateAction<Quote[]>>;
+  onSearchResults: (results: Quote[]) => void;
   onError: (error: string) => void;
 }
 
-const QuoteSearch: React.FC<QuoteSearchProps> = ({ setSearchResults, onError }) => {
+const QuoteSearch: React.FC<QuoteSearchProps> = ({ onSearchResults, onError }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState<'content' | 'author' | 'book_title'>('content');
 
@@ -34,7 +34,7 @@ const QuoteSearch: React.FC<QuoteSearchProps> = ({ setSearchResults, onError }) 
       return;
     }
 
-    setSearchResults(data || []);
+    onSearchResults(data || []);
   };
 
   return (

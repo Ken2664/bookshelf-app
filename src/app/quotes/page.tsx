@@ -1,31 +1,54 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import QuoteForm from '../../components/QuoteForm';
-import QuoteList from '../../components/QuoteList';
 import QuoteSearch from '../../components/QuoteSearch';
+import QuoteCard from '../../components/QuoteCard';
 import { Quote } from '../../types';
-import { useAuth } from '../../hooks/useAuth'; // カスタムフックを使用
-import AuthGuard from '@/components/AuthGuard'; // AuthGuardをインポート
+import { useAuth } from '../../hooks/useAuth';
+import AuthGuard from '@/components/AuthGuard';
 
 const QuotesPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
-  const [searchResults, setSearchResults] = useState<Quote[]>([]);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [randomQuotes, setRandomQuotes] = useState<Quote[]>([]);
   const { user, loading } = useAuth();
   const router = useRouter();
   const supabase = createClientComponentClient();
 
+  useEffect(() => {
+    const fetchRandomQuotes = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from('quotes')
+          .select('*')
+          .eq('user_id', user.id);
+
+        if (error) {
+          handleError(error.message);
+        } else if (data) {
+          const shuffled = data.sort(() => 0.5 - Math.random());
+          setRandomQuotes(shuffled.slice(0, 5));
+        }
+      }
+    };
+
+    fetchRandomQuotes();
+  }, [user]);
+
   const handleQuoteAdded = () => {
     setShowForm(false);
-    // 必要に応じて、ここで検索結果を更新するロジックを追加
   };
 
   const handleError = (error: string) => {
     setPageError(error);
-    // エラーに応じて適切な処理を行う（例：ログアウトしてログインページにリダイレクトするなど）
+  };
+
+  const handleSearchResults = (results: Quote[]) => {
+    const query = results.map((quote) => quote.id).join(',');
+    router.push(`/quotes/results?ids=${query}`);
   };
 
   if (loading) {
@@ -33,7 +56,7 @@ const QuotesPage: React.FC = () => {
   }
 
   if (!user) {
-    return null; // または適切なリダイレクト処理
+    return null;
   }
 
   return (
@@ -57,9 +80,14 @@ const QuotesPage: React.FC = () => {
 
         {showForm && <QuoteForm />}
 
-        <QuoteSearch setSearchResults={setSearchResults} onError={handleError} />
+        <QuoteSearch setSearchResults={handleSearchResults} onError={handleError} />
 
-        <QuoteList quotes={searchResults} onError={handleError} />
+        <div className="mt-6">
+          <h2 className="text-xl font-bold mb-4">ランダムなセリフ</h2>
+          {randomQuotes.map((quote) => (
+            <QuoteCard key={quote.id} quote={quote} />
+          ))}
+        </div>
       </div>
     </AuthGuard>
   );
