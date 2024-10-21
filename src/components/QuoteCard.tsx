@@ -1,17 +1,66 @@
-import React from 'react';
-import { Quote } from '../types';
+import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion'
+import { Quote } from '@/types'
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { BookOpen } from 'lucide-react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 interface QuoteCardProps {
   quote: Quote;
 }
 
 const QuoteCard: React.FC<QuoteCardProps> = ({ quote }) => {
-  return (
-    <div className="border p-4 rounded shadow-md mb-4">
-      <p className="text-lg">{quote.content}</p>
-      <p className="text-sm text-gray-500">- {quote.author}</p>
-    </div>
-  );
-};
+  const [bookTitle, setBookTitle] = useState<string | null>(null);
+  const supabase = createClientComponentClient();
 
-export default QuoteCard;
+  useEffect(() => {
+    const fetchBookTitle = async () => {
+      if (quote.book_id) {
+        const { data, error } = await supabase
+          .from('books')
+          .select('title')
+          .eq('id', quote.book_id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching book title:', error);
+        } else if (data) {
+          setBookTitle(data.title);
+        }
+      }
+    };
+
+    fetchBookTitle();
+  }, [quote.book_id]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="overflow-hidden">
+        <CardContent className="pt-6">
+          <blockquote className="text-lg italic text-gray-700 mb-4">
+            "{quote.content}"
+          </blockquote>
+        </CardContent>
+        <CardFooter className="bg-amber-50 text-brown-800 h-[45px] flex flex-col justify-center">
+          <div className="flex items-center justify-end w-full mt-5">
+            {bookTitle && (
+              <div className="flex items-center text-sm mr-4">
+                <BookOpen className="w-4 h-4 mr-1" />
+                <span>{bookTitle}</span>
+              </div>
+            )}
+            <p className="text-sm">
+              - {quote.author}
+            </p>
+          </div>
+        </CardFooter>
+      </Card>
+    </motion.div>
+  )
+}
+
+export default QuoteCard

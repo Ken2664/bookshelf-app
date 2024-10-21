@@ -1,129 +1,151 @@
-import React, { useState, useEffect } from 'react';
-import { Tag } from '../types';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/hooks/useAuth';
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Tag } from '@/types'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Plus, Search, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface TagInputProps {
-  selectedTags: Tag[];
-  setSelectedTags: (tags: Tag[]) => void;
+  selectedTags: Tag[]
+  setSelectedTags: React.Dispatch<React.SetStateAction<Tag[]>>
+  onKeyDown?: (e: React.KeyboardEvent) => void
 }
 
-const TagInput: React.FC<TagInputProps> = ({ selectedTags, setSelectedTags }) => {
-  const [allTags, setAllTags] = useState<Tag[]>([]);
-  const [newTag, setNewTag] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [visibleTags, setVisibleTags] = useState<Tag[]>([]);
-  const [showAllTags, setShowAllTags] = useState<boolean>(false);
-  const { user } = useAuth();
+const TagInput: React.FC<TagInputProps> = ({ selectedTags, setSelectedTags, onKeyDown }) => {
+  const [allTags, setAllTags] = useState<Tag[]>([])
+  const [newTag, setNewTag] = useState<string>('')
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [visibleTags, setVisibleTags] = useState<Tag[]>([])
+  const [showAllTags, setShowAllTags] = useState<boolean>(false)
+  const { user } = useAuth()
 
-  const TAGS_PER_PAGE = 20;
+  const TAGS_PER_PAGE = 20
 
   const addTag = async (tagName: string) => {
-    if (!user) return;
+    if (!user) return
     const { data, error } = await supabase
       .from('tags')
       .insert({ name: tagName, user_id: user.id })
       .select()
-      .single();
+      .single()
 
     if (error) {
-      console.error('Error adding tag:', error);
-      return;
+      console.error('Error adding tag:', error)
+      return
     }
-    return data;
-  };
+    return data
+  }
 
   useEffect(() => {
     const fetchTags = async () => {
-      if (!user) return;
+      if (!user) return
       const { data, error } = await supabase
         .from('tags')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
 
       if (error) {
-        console.error('タグの取得中にエラーが発生しました:', error);
+        console.error('タグの取得中にエラーが発生しました:', error)
       } else if (data) {
-        setAllTags(data);
+        setAllTags(data)
       }
-    };
-    fetchTags();
-  }, [user]);
+    }
+    fetchTags()
+  }, [user])
 
   useEffect(() => {
     const filteredTags = allTags.filter(tag =>
       tag.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setVisibleTags(showAllTags ? filteredTags : filteredTags.slice(0, TAGS_PER_PAGE));
-  }, [allTags, searchQuery, showAllTags]);
+    )
+    setVisibleTags(showAllTags ? filteredTags : filteredTags.slice(0, TAGS_PER_PAGE))
+  }, [allTags, searchQuery, showAllTags])
 
   const handleAddTag = async () => {
-    if (newTag.trim() === '') return;
-    const createdTag = await addTag(newTag);
+    if (newTag.trim() === '') return
+    const createdTag = await addTag(newTag)
     if (createdTag) {
-      setAllTags([...allTags, createdTag]);
-      setNewTag('');
+      setAllTags([...allTags, createdTag])
+      setNewTag('')
     }
-  };
+  }
 
   const toggleTag = (tag: Tag) => {
     if (selectedTags.find(t => t.id === tag.id)) {
-      setSelectedTags(selectedTags.filter(t => t.id !== tag.id));
+      setSelectedTags(selectedTags.filter(t => t.id !== tag.id))
     } else {
-      setSelectedTags([...selectedTags, tag]);
+      setSelectedTags([...selectedTags, tag])
     }
-  };
+  }
 
   return (
-    <div className="space-y-2">
+    <div onKeyDown={onKeyDown} className="space-y-4">
       <div className="flex items-center space-x-2">
-        <input
+        <Input
           type="text"
           value={newTag}
           onChange={(e) => setNewTag(e.target.value)}
           placeholder="新しいタグを追加"
-          className="flex-1 p-2 border rounded"
         />
-        <button
-          type="button"
-          onClick={handleAddTag}
-          className="px-4 py-2 bg-green-500 text-white rounded"
-        >
-          追加
-        </button>
+        <Button onClick={handleAddTag} size="icon">
+          <Plus className="h-4 w-4" />
+        </Button>
       </div>
-      <input
-        type="text"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="タグを検索"
-        className="w-full p-2 border rounded"
-      />
-      <div className="flex flex-wrap gap-2">
-        {visibleTags.map(tag => (
-          <span
-            key={tag.id}
-            onClick={() => toggleTag(tag)}
-            className={`px-3 py-1 rounded-full cursor-pointer ${
-              selectedTags.find(t => t.id === tag.id)
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700'
-            }`}
-          >
-            {tag.name}
-          </span>
-        ))}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <Input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="タグを検索"
+          className="pl-10"
+        />
       </div>
+      <ScrollArea className="h-40">
+        <AnimatePresence>
+          {visibleTags.map(tag => (
+            <motion.button
+              key={tag.id}
+              onClick={() => toggleTag(tag)}
+              className={`m-1 px-3 py-1 rounded-full ${
+                selectedTags.find(t => t.id === tag.id)
+                  ? 'bg-amber-500 text-white'
+                  : 'bg-gray-200 text-gray-700'
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {tag.name}
+            </motion.button>
+          ))}
+        </AnimatePresence>
+      </ScrollArea>
       {!showAllTags && allTags.length > TAGS_PER_PAGE && (
-        <button
+        <Button
           onClick={() => setShowAllTags(true)}
-          className="mt-2 text-blue-500 hover:underline"
+          variant="link"
+          className="w-full"
         >
           もっと見る
-        </button>
+          <ChevronDown className="ml-2 h-4 w-4" />
+        </Button>
+      )}
+      {showAllTags && (
+        <Button
+          onClick={() => setShowAllTags(false)}
+          variant="link"
+          className="w-full"
+        >
+          閉じる
+          <ChevronUp className="ml-2 h-4 w-4" />
+        </Button>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default TagInput;
+export default TagInput

@@ -1,150 +1,184 @@
-import React, { useState, useEffect } from 'react';
-import { Book, BookStatus, Tag } from '@/types';
-import { useBooks } from '@/hooks/useBooks';
-import RatingStars from './RatingStars';
-import BookStatusSelect from './BookStatusSelect';
-import { HeartIcon as SolidHeartIcon } from '@heroicons/react/24/solid';
-import { HeartIcon as OutlineHeartIcon } from '@heroicons/react/24/outline';
-import { TrashIcon } from '@heroicons/react/24/outline';
+import React, { useState, useEffect } from 'react'
+import { Book, BookStatus } from '@/types'
+import { useBooks } from '@/hooks/useBooks'
+import { motion } from 'framer-motion'
+import { Heart, Trash2, Edit2, Save, X } from 'lucide-react'
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 
 interface BookCardProps {
-  book: Book;
-  onDelete: (id: string) => void;
+  book: Book
+  onDelete: (id: string) => void
 }
 
 const BookCard: React.FC<BookCardProps> = ({ book: initialBook, onDelete }) => {
-  const { updateBook, updateBookStatus, deleteBook } = useBooks();
-  const [book, setBook] = useState<Book>(initialBook);
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [rating, setRating] = useState<number>(initialBook.rating);
-  const [comment, setComment] = useState<string>(initialBook.comment);
-  const [isLoading, setIsLoading] = useState(true);
+  const { updateBook, updateBookStatus, deleteBook } = useBooks()
+  const [book, setBook] = useState<Book>(initialBook)
+  const [isEditing, setIsEditing] = useState<boolean>(false)
+  const [rating, setRating] = useState<number>(initialBook.rating)
+  const [comment, setComment] = useState<string>(initialBook.comment)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    setBook(initialBook);
-    setRating(initialBook.rating);
-    setComment(initialBook.comment);
-    setIsLoading(false);
-  }, [initialBook]);
+    setBook(initialBook)
+    setRating(initialBook.rating)
+    setComment(initialBook.comment)
+    setIsLoading(false)
+  }, [initialBook])
 
   const handleSave = async () => {
-    console.log('Saving book:', book.id, { rating, comment, favorite: book.favorite });
-    const updatedBook = await updateBook(book.id, { rating, comment, favorite: book.favorite });
+    const updatedBook = await updateBook(book.id, { rating, comment, favorite: book.favorite })
     if (updatedBook) {
-      console.log('Book updated successfully:', updatedBook);
-      setBook(updatedBook);
-      setIsEditing(false);
-    } else {
-      console.error('Failed to update book');
+      setBook(updatedBook)
+      setIsEditing(false)
     }
-  };
+  }
 
   const toggleFavorite = async () => {
-    const newFavoriteStatus = !book.favorite;
-    console.log('Toggling favorite status:', book.id, newFavoriteStatus);
-    const updatedBook = await updateBook(book.id, { favorite: newFavoriteStatus });
+    const newFavoriteStatus = !book.favorite
+    const updatedBook = await updateBook(book.id, { favorite: newFavoriteStatus })
     if (updatedBook) {
-      console.log('Favorite status updated successfully:', updatedBook);
-      setBook(updatedBook);
-    } else {
-      console.error('Failed to update favorite status');
+      setBook(updatedBook)
     }
-  };
+  }
 
   const handleStatusChange = async (newStatus: BookStatus) => {
-    console.log('Changing book status:', book.id, newStatus);
-    // 即座にUIを更新
-    setBook(prevBook => ({ ...prevBook, status: newStatus }));
-    
-    const updatedBook = await updateBookStatus(book.id, newStatus);
+    setBook(prevBook => ({ ...prevBook, status: newStatus }))
+    const updatedBook = await updateBookStatus(book.id, newStatus)
     if (updatedBook) {
-      console.log('Book status updated successfully:', updatedBook);
-      setBook(updatedBook);
+      setBook(updatedBook)
     } else {
-      console.error('Failed to update book status');
-      // 更新に失敗した場合、元の状態に戻す
-      setBook(prevBook => ({ ...prevBook, status: book.status }));
+      setBook(prevBook => ({ ...prevBook, status: book.status }))
     }
-  };
+  }
 
   const handleDelete = async () => {
     if (window.confirm('本当にこの本を削除しますか？')) {
-      console.log('Deleting book:', book.id);
-      await deleteBook(book.id);
-      onDelete(book.id);
+      await deleteBook(book.id)
+      onDelete(book.id)
+    }
+  }
+
+  const getStatusText = (status: BookStatus) => {
+    switch (status) {
+      case 'unread':
+        return '読みたい';
+      case 'reading':
+        return '読書中';
+      case 'completed':
+        return '読了';
+      default:
+        return '不明';
     }
   };
 
   if (isLoading || !book) {
-    return <div>Loading...</div>;
+    return <div className="flex justify-center items-center h-48">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brown-600"></div>
+    </div>
   }
 
   return (
-    <div className="border p-4 rounded shadow">
-      <div className="flex justify-between items-start">
-        <div>
-          <h2 className="text-xl font-bold">{book.title}</h2>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-amber-100 to-orange-100">
+          <CardTitle className="flex justify-between items-start">
+            <span className="text-xl font-serif text-brown-800">{book.title}</span>
+            <div className="flex space-x-2">
+              <Button variant="ghost" size="icon" onClick={toggleFavorite}>
+                <Heart className={`h-5 w-5 ${book.favorite ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleDelete}>
+                <Trash2 className="h-5 w-5 text-red-500" />
+              </Button>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
           <p className="text-gray-600">著者: {book.author}</p>
           <p className="text-gray-600">出版社: {book.publisher}</p>
-        </div>
-        <div className="flex items-center">
-          <button onClick={toggleFavorite} className="mr-2">
-            {book.favorite ? (
-              <SolidHeartIcon className="w-6 h-6 text-red-500" />
-            ) : (
-              <OutlineHeartIcon className="w-6 h-6 text-gray-500" />
-            )}
-          </button>
-          <button onClick={handleDelete} className="text-red-500 hover:text-red-700">
-            <TrashIcon className="w-6 h-6" />
-          </button>
-        </div>
-      </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {book.book_tags && book.book_tags.map((bookTag) => (
+              <span key={bookTag.id} className="px-3 py-1 bg-amber-100 text-brown-700 rounded-full text-sm">
+                {bookTag.tag?.name || 'Unknown Tag'}
+              </span>
+            ))}
+          </div>
+          <div className="mt-4">
+            <span className="font-semibold text-brown-700">進捗状態: </span>
+            <Select value={book.status} onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue>{getStatusText(book.status)}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unread">読みたい</SelectItem>
+                <SelectItem value="reading">読書中</SelectItem>
+                <SelectItem value="completed">読了</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {isEditing ? (
+            <div className="mt-4 space-y-4">
+              <div className="flex items-center">
+                <span className="mr-2 text-brown-700">評価:</span>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Button
+                    key={star}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setRating(star)}
+                    className={`p-1 ${rating >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+                  >
+                    ★
+                  </Button>
+                ))}
+              </div>
+              <Textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="コメントを入力してください（最大100文字）"
+                maxLength={100}
+              />
+            </div>
+          ) : (
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center">
+                <span className="mr-2 text-brown-700">評価:</span>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span key={star} className={`text-2xl ${book.rating >= star ? 'text-yellow-400' : 'text-gray-300'}`}>
+                    ★
+                  </span>
+                ))}
+              </div>
+              <p className="text-gray-700">{book.comment}</p>
+            </div>
+          )}
+        </CardContent>
+        <CardFooter>
+          {isEditing ? (
+            <div className="flex space-x-2">
+              <Button onClick={handleSave}>
+                <Save className="mr-2 h-4 w-4" /> 保存
+              </Button>
+              <Button variant="outline" onClick={() => setIsEditing(false)}>
+                <X className="mr-2 h-4 w-4" /> キャンセル
+              </Button>
+            </div>
+          ) : (
+            <Button onClick={() => setIsEditing(true)}>
+              <Edit2 className="mr-2 h-4 w-4" /> 編集
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
+    </motion.div>
+  )
+}
 
-      <div className="mt-2 flex flex-wrap gap-2">
-        {book.book_tags && book.book_tags.map((bookTag) => (
-          <span key={bookTag.id} className="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-sm">
-            {bookTag.tag?.name || 'Unknown Tag'}
-          </span>
-        ))}
-      </div>
-
-      <div className="mt-2">
-        <span className="font-semibold">進捗状態: </span>
-        <BookStatusSelect status={book.status} onStatusChange={handleStatusChange} />
-      </div>
-
-      {isEditing ? (
-        <div className="mt-2">
-          <RatingStars rating={rating} setRating={setRating} />
-          <textarea
-            className="w-full mt-2 p-2 border rounded"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            maxLength={100}
-            placeholder="コメントを入力してください（最大100文字）"
-          />
-          <button
-            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
-            onClick={handleSave}
-          >
-            保存
-          </button>
-        </div>
-      ) : (
-        <div className="mt-2">
-          <RatingStars rating={book.rating} readOnly />
-          <p className="mt-2 text-gray-700">{book.comment}</p>
-          <button
-            className="mt-2 px-4 py-2 bg-green-500 text-white rounded"
-            onClick={() => setIsEditing(true)}
-          >
-            編集
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default BookCard;
+export default BookCard

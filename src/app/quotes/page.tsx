@@ -1,22 +1,27 @@
-"use client"
+'use client'
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import QuoteForm from '../../components/QuoteForm';
-import QuoteSearch from '../../components/QuoteSearch';
-import QuoteCard from '../../components/QuoteCard';
-import { Quote } from '../../types';
-import { useAuth } from '../../hooks/useAuth';
-import AuthGuard from '@/components/AuthGuard';
+import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import QuoteForm from '@/components/QuoteForm'
+import QuoteSearch from '@/components/QuoteSearch'
+import QuoteCard from '@/components/QuoteCard'
+import { Quote } from '@/types'
+import { useAuth } from '@/hooks/useAuth'
+import AuthGuard from '@/components/AuthGuard'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Loader2, Plus, X } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 const QuotesPage: React.FC = () => {
-  const [showForm, setShowForm] = useState(false);
-  const [pageError, setPageError] = useState<string | null>(null);
-  const [randomQuotes, setRandomQuotes] = useState<Quote[]>([]);
-  const { user, loading } = useAuth();
-  const router = useRouter();
-  const supabase = createClientComponentClient();
+  const [showForm, setShowForm] = useState(false)
+  const [pageError, setPageError] = useState<string | null>(null)
+  const [randomQuotes, setRandomQuotes] = useState<Quote[]>([])
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const supabase = createClientComponentClient()
 
   useEffect(() => {
     const fetchRandomQuotes = async () => {
@@ -24,73 +29,117 @@ const QuotesPage: React.FC = () => {
         const { data, error } = await supabase
           .from('quotes')
           .select('*')
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
 
         if (error) {
-          handleError(error.message);
+          handleError(error.message)
         } else if (data) {
-          const shuffled = data.sort(() => 0.5 - Math.random());
-          setRandomQuotes(shuffled.slice(0, 5));
+          const shuffled = data.sort(() => 0.5 - Math.random())
+          setRandomQuotes(shuffled.slice(0, 5))
         }
       }
-    };
+    }
 
-    fetchRandomQuotes();
-  }, [user]);
+    fetchRandomQuotes()
+  }, [user])
 
   const handleQuoteAdded = () => {
-    setShowForm(false);
-  };
+    setShowForm(false)
+  }
 
   const handleError = (error: string) => {
-    setPageError(error);
-  };
+    setPageError(error)
+  }
 
   const handleSearchResults = (results: Quote[]) => {
-    const query = results.map((quote) => quote.id).join(',');
-    router.push(`/quotes/results?ids=${query}`);
-  };
+    const query = results.map((quote) => quote.id).join(',')
+    router.push(`/quotes/results?ids=${query}`)
+  }
 
   if (loading) {
-    return <div className="container mx-auto px-4 py-8">読み込み中...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-brown-600" />
+      </div>
+    )
   }
 
   if (!user) {
-    return null;
+    return null
   }
 
   return (
     <AuthGuard>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">セリフ管理</h1>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="container mx-auto px-4 py-8 bg-gradient-to-br from-amber-50 to-orange-100"
+      >
+        <h1 className="text-3xl font-serif text-brown-800 mb-6">セリフ管理</h1>
         
         {pageError && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <strong className="font-bold">エラー: </strong>
-            <span className="block sm:inline">{pageError}</span>
-          </div>
+          <Alert variant="destructive" className="mb-4">
+            <AlertTitle>エラー</AlertTitle>
+            <AlertDescription>{pageError}</AlertDescription>
+          </Alert>
         )}
         
-        <button
+        <Button
           onClick={() => setShowForm(!showForm)}
-          className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          className="mb-4"
         >
-          {showForm ? 'フォームを閉じる' : 'セリフを追加'}
-        </button>
+          {showForm ? (
+            <>
+              <X className="mr-2 h-4 w-4" />
+              フォームを閉じる
+            </>
+          ) : (
+            <>
+              <Plus className="mr-2 h-4 w-4" />
+              セリフを追加
+            </>
+          )}
+        </Button>
 
-        {showForm && <QuoteForm />}
+        <AnimatePresence>
+          {showForm && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card className="mb-4">
+                <CardContent className="pt-6">
+                  <QuoteForm />
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <QuoteSearch setSearchResults={handleSearchResults} onError={handleError} />
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <QuoteSearch onSearchResults={handleSearchResults} onError={handleError} />
+          </CardContent>
+        </Card>
 
-        <div className="mt-6">
-          <h2 className="text-xl font-bold mb-4">ランダムなセリフ</h2>
-          {randomQuotes.map((quote) => (
-            <QuoteCard key={quote.id} quote={quote} />
-          ))}
-        </div>
-      </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl font-serif text-brown-800">今日のおすすめ</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {randomQuotes.map((quote) => (
+                <QuoteCard key={quote.id} quote={quote} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </AuthGuard>
-  );
-};
+  )
+}
 
-export default QuotesPage;
+export default QuotesPage

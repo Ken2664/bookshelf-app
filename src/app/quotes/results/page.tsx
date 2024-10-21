@@ -1,57 +1,93 @@
-"use client"
+'use client'
 
-import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import QuoteCard from '../../../components/QuoteCard';
-import { Quote } from '../../../types';
+import React, { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import QuoteCard from '@/components/QuoteCard'
+import { Quote } from '@/types'
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Loader2, ArrowLeft } from 'lucide-react'
 
 const QuoteResultsPage: React.FC = () => {
-  const [quotes, setQuotes] = useState<Quote[]>([]);
-  const searchParams = useSearchParams();
-  const supabase = createClientComponentClient();
-  const router = useRouter(); // useRouterを追加
+  const [quotes, setQuotes] = useState<Quote[]>([])
+  const [loading, setLoading] = useState(true)
+  const searchParams = useSearchParams()
+  const supabase = createClientComponentClient()
+  const router = useRouter()
 
   useEffect(() => {
     const fetchQuotes = async () => {
-      const ids = searchParams.get('ids');
+      const ids = searchParams.get('ids')
       if (ids) {
         const { data, error } = await supabase
           .from('quotes')
           .select('*')
-          .in('id', ids.split(','));
+          .in('id', ids.split(','))
 
         if (error) {
-          console.error('Error fetching quotes:', error);
+          console.error('Error fetching quotes:', error)
         } else {
-          setQuotes(data || []);
+          setQuotes(data || [])
         }
       }
-    };
+      setLoading(false)
+    }
 
-    fetchQuotes();
-  }, [searchParams]);
+    fetchQuotes()
+  }, [searchParams])
 
   const handleRedirect = () => {
-    router.push('/quotes'); // quotesページにリダイレクト
-  };
+    router.push('/quotes')
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-brown-600" />
+      </div>
+    )
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">検索結果</h1>
-      {quotes.length > 0 ? (
-        quotes.map((quote) => <QuoteCard key={quote.id} quote={quote} />)
-      ) : (
-        <p>セリフが見つかりませんでした。</p>
-      )}
-      <button
-        onClick={handleRedirect}
-        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-      >
-        セリフページに戻る
-      </button>
-    </div>
-  );
-};
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="container mx-auto px-4 py-8"
+    >
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-serif text-brown-800">検索結果</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {quotes.length > 0 ? (
+            <div className="space-y-4">
+              {quotes.map((quote) => (
+                <motion.div
+                  key={quote.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <QuoteCard quote={quote} />
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-600">セリフが見つかりませんでした。</p>
+          )}
+        </CardContent>
+        <CardFooter>
+          <Button onClick={handleRedirect} variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            セリフページに戻る
+          </Button>
+        </CardFooter>
+      </Card>
+    </motion.div>
+  )
+}
 
-export default QuoteResultsPage;
+export default QuoteResultsPage

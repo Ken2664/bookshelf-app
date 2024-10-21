@@ -1,94 +1,93 @@
-import { NextPage } from 'next';
+'use client'
 
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import QuoteCard from '@/components/QuoteCard'
+import { Quote } from '@/types'
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Loader2, ArrowLeft } from 'lucide-react'
 
-import { useRouter } from 'next/navigation';
+const QuoteResultsPage: React.FC = () => {
+  const [quotes, setQuotes] = useState<Quote[]>([])
+  const [loading, setLoading] = useState(true)
+  const searchParams = useSearchParams()
+  const supabase = createClientComponentClient()
+  const router = useRouter()
 
-import QuoteForm from '../../components/QuoteForm';
+  useEffect(() => {
+    const fetchQuotes = async () => {
+      const ids = searchParams.get('ids')
+      if (ids) {
+        const { data, error } = await supabase
+          .from('quotes')
+          .select('*')
+          .in('id', ids.split(','))
 
-import { useAuth } from '../../hooks/useAuth'; // カスタムフックを使用
+        if (error) {
+          console.error('Error fetching quotes:', error)
+        } else {
+          setQuotes(data || [])
+        }
+      }
+      setLoading(false)
+    }
 
-import AuthGuard from '@/components/AuthGuard'; // AuthGuardをインポート
+    fetchQuotes()
+  }, [searchParams])
 
-
-
-const AddQuotePage: NextPage = () => {
-
-  const router = useRouter();
-
-  const { user, loading } = useAuth();
-
-  const [pageError, setPageError] = useState<string | null>(null);
-
-
-
-  const handleQuoteAdded = () => {
-
-    router.push('/quotes');
-
-  };
-
-
-
-  const handleError = (error: string) => {
-
-    setPageError(error);
-
-    // エラーに応じて適切な処理を行う（例：ログアウトしてログインページにリダイレクトするなど）
-
-  };
-
-
+  const handleRedirect = () => {
+    router.push('/quotes')
+  }
 
   if (loading) {
-
-    return <div className="container mx-auto px-4 py-8">読み込み中...</div>;
-
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-brown-600" />
+      </div>
+    )
   }
-
-
-
-  if (!user) {
-
-    return null; // または適切なリダイレクト処理
-
-  }
-
-
 
   return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="container mx-auto px-4 py-8"
+    >
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-serif text-brown-800">検索結果</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {quotes.length > 0 ? (
+            <div className="space-y-4">
+              {quotes.map((quote) => (
+                <motion.div
+                  key={quote.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <QuoteCard quote={quote} />
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-600">セリフが見つかりませんでした。</p>
+          )}
+        </CardContent>
+        <CardFooter>
+          <Button onClick={handleRedirect} variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            セリフページに戻る
+          </Button>
+        </CardFooter>
+      </Card>
+    </motion.div>
+  )
+}
 
-    <AuthGuard>
-
-      <div className="container mx-auto px-4 py-8">
-
-        <h1 className="text-2xl font-bold mb-6">セリフを追加</h1>
-
-        {pageError && (
-
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-
-            <strong className="font-bold">エラー: </strong>
-
-            <span className="block sm:inline">{pageError}</span>
-
-          </div>
-
-        )}
-
-        <QuoteForm />
-
-      </div>
-
-    </AuthGuard>
-
-  );
-
-};
-
-
-
-export default AddQuotePage;
-
-
-
+export default QuoteResultsPage
