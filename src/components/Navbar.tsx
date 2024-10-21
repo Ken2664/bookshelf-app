@@ -10,12 +10,12 @@ import { Button } from "@/components/ui/button"
 import { Book, User, Heart, BookOpen, Quote, LogOut, Menu } from 'lucide-react'
 
 const navLinks = [
-  { href: '/authors/add', label: 'お気に入り作家', icon: Heart },
+  { href: '/my-page', label: 'マイページ', icon: User },
   { href: '/books', label: '本の管理', icon: Book },
   { href: '/recommended-books', label: 'おすすめの本', icon: BookOpen },
-  { href: '/my-page', label: 'マイページ', icon: User },
   { href: '/loans', label: '貸し借り管理', icon: Book },
-  { href: '/quotes', label: 'セリフ管理', icon: Quote },
+  { href: '/quotes', label: 'セリフ収集', icon: Quote },
+  { href: '/authors/add', label: 'お気に入り作家', icon: Heart },
 ]
 
 function useRouteChange(callback: () => void) {

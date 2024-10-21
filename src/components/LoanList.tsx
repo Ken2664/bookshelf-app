@@ -1,21 +1,28 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useLoans } from '@/hooks/useLoans'
 import { useBooks } from '@/hooks/useBooks'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { BookOpen, User, Calendar, CheckCircle } from 'lucide-react'
+import { Input } from "@/components/ui/input"
 
 const LoanList: React.FC = () => {
   const { loans, loading, updateLoan } = useLoans()
   const { books } = useBooks()
+  const [searchTerm, setSearchTerm] = useState('')
 
   const handleReturn = async (id: string) => {
     const returnDate = new Date().toISOString().split('T')[0]
     await updateLoan(id, returnDate)
   }
+
+  const filteredLoans = loans.filter(loan => {
+    const book = books.find(b => b.id === loan.book_id)
+    return book?.title.toLowerCase().includes(searchTerm.toLowerCase())
+  })
 
   if (loading) {
     return (
@@ -32,7 +39,15 @@ const LoanList: React.FC = () => {
       transition={{ duration: 0.5 }}
       className="space-y-4"
     >
-      {loans.map((loan, index) => {
+      <div className="mb-4">
+        <Input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="作品名で検索"
+        />
+      </div>
+      {filteredLoans.map((loan, index) => {
         const book = books.find((b) => b.id === loan.book_id)
         return (
           <motion.div

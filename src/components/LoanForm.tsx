@@ -63,6 +63,8 @@ const LoanForm: React.FC = () => {
         setLoanDate('')
         setSearchTerm('')
         setError(null)
+        // ここに画面をリロードするコードを追加
+        window.location.reload()
       } catch (error) {
         console.error('Error adding loan:', error)
         setError('貸出の記録中にエラーが発生しました。もう一度お試しください。')

@@ -49,9 +49,12 @@ const SearchResultsPage: React.FC = () => {
     const criteria = []
     if (title) criteria.push(`タイトル: "${title}"`)
     if (author) criteria.push(`著者: "${author}"`)
-    if (searchResults.length > 0 && searchResults[0].book_tags) {
-      const tagNames = searchResults[0].book_tags.map(tag => tag.tag.name).join(', ')
-      if (tagNames) criteria.push(`タグ: ${tagNames}`)
+    if (tagIds.length > 0) {
+      const tagNames = tagIds.map(id => {
+        const tag = searchResults.find(book => book.book_tags?.some(bt => bt.tag.id === id))?.book_tags?.find(bt => bt.tag.id === id)?.tag.name
+        return tag || id
+      }).join(', ')
+      criteria.push(`タグ: ${tagNames}`)
     }
     return criteria.length > 0 ? criteria.join(', ') : 'すべての本'
   }

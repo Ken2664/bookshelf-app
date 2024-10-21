@@ -57,7 +57,7 @@ const MyPage: React.FC = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl font-serif text-brown-800">読書の統計</CardTitle>
+              <CardTitle className="text-xl font-serif text-brown-800">読書の記録</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
