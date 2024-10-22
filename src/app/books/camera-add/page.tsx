@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import AuthGuard from '@/components/AuthGuard'
@@ -49,6 +49,16 @@ export default function CameraAddBookPage() {
   const [captureMethod, setCaptureMethod] = useState<'camera' | 'upload' | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const { user } = useAuth()
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const handleCapture = async (imageBase64: string) => {
     setLoading(true)
@@ -159,15 +169,17 @@ export default function CameraAddBookPage() {
       >
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-serif text-brown-800">カメラまたは画像アップロードで本を追加</CardTitle>
+            <CardTitle className="text-2xl font-custom text-brown-800">カメラまたは画像アップロードで本を追加</CardTitle>
           </CardHeader>
           <CardContent>
             {!captureMethod && (
               <div className="flex space-x-4 mb-4">
-                <Button onClick={() => setCaptureMethod('camera')} variant="outline">
-                  <Camera className="mr-2 h-4 w-4" />
-                  カメラを使用
-                </Button>
+                {isMobile && (
+                  <Button onClick={() => setCaptureMethod('camera')} variant="outline">
+                    <Camera className="mr-2 h-4 w-4" />
+                    カメラを使用
+                  </Button>
+                )}
                 <Button onClick={() => setCaptureMethod('upload')} variant="outline">
                   <Upload className="mr-2 h-4 w-4" />
                   画像をアップロード
@@ -175,7 +187,7 @@ export default function CameraAddBookPage() {
               </div>
             )}
 
-            {captureMethod === 'camera' && <CameraCapture onCapture={handleCapture} />}
+            {captureMethod === 'camera' && isMobile && <CameraCapture onCapture={handleCapture} />}
 
             {captureMethod === 'upload' && (
               <div className="mb-4">

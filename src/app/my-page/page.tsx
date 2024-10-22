@@ -26,11 +26,11 @@ const MyPage: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="container mx-auto px-4 py-8 bg-gradient-to-br from-amber-50 to-orange-100 min-h-screen"
       >
-        <h1 className="text-3xl font-serif text-brown-800 mb-6">マイページ</h1>
+        <h1 className="text-3xl font-custom text-brown-800 mb-6">マイページ</h1>
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl font-serif text-brown-800">ユーザー情報</CardTitle>
+              <CardTitle className="text-xl font-custom text-brown-800">ユーザー情報</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -57,7 +57,7 @@ const MyPage: React.FC = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl font-serif text-brown-800">読書の記録</CardTitle>
+              <CardTitle className="text-xl font-custom text-brown-800">読書の記録</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">

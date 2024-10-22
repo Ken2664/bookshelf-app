@@ -27,7 +27,7 @@ import { Search, Loader2 } from 'lucide-react'
 
 
 
-import { useFavoriteAuthors } from '@/hooks/useFavoriteAuthors'
+import { useFavoriteAuthors } from '../hooks/useFavoriteAuthors'
 
 // FavoriteAuthor 型を定義
 type FavoriteAuthor = {
@@ -119,7 +119,7 @@ const SearchBar: React.FC = () => {
 
         <CardHeader>
 
-          <CardTitle className="text-2xl font-serif text-brown-800">本を検索</CardTitle>
+          <CardTitle className="text-2xl font-custom text-brown-800">本を検索</CardTitle>
 
         </CardHeader>
 

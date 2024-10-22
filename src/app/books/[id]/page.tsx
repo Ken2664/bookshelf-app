@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '../../../lib/supabase'
 import { Book } from '@/types'
 import AuthGuard from '@/components/AuthGuard'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
@@ -65,7 +65,7 @@ export default function BookDetailPage({ params }: { params: { id: string } }) {
       >
         <Card>
           <CardHeader>
-            <CardTitle className="text-3xl font-serif text-brown-800">{book.title}</CardTitle>
+            <CardTitle className="text-3xl font-custom text-brown-800">{book.title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="flex items-center text-gray-600">

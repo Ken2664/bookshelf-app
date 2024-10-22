@@ -17,7 +17,7 @@ const LoansPage: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="container mx-auto px-4 py-8 bg-gradient-to-br from-amber-50 to-orange-100"
       >
-        <h1 className="text-3xl font-serif text-brown-800 mb-6 text-center">貸し借り管理</h1>
+        <h1 className="text-3xl font-custom text-brown-800 mb-6 text-center">貸し借り管理</h1>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -26,7 +26,7 @@ const LoansPage: React.FC = () => {
           >
             <Card>
               <CardHeader>
-                <CardTitle className="text-2xl font-serif text-brown-800 flex items-center">
+                <CardTitle className="text-2xl font-custom text-brown-800 flex items-center">
                   <ListPlus className="mr-2 h-6 w-6 text-amber-600" />
                   新しい貸出を記録
                 </CardTitle>
@@ -43,7 +43,7 @@ const LoansPage: React.FC = () => {
           >
             <Card>
               <CardHeader>
-                <CardTitle className="text-2xl font-serif text-brown-800 flex items-center">
+                <CardTitle className="text-2xl font-custom text-brown-800 flex items-center">
                   <BookOpen className="mr-2 h-6 w-6 text-amber-600" />
                   貸出リスト
                 </CardTitle>

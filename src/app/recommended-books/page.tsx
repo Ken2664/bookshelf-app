@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '../../lib/supabase'
 import RecommendedBookCard from '@/components/RecommendedBookCard'
 import AuthGuard from '@/components/AuthGuard'
 import { fetchGoogleBooksInfo } from '@/lib/googleBooks'
@@ -60,7 +60,7 @@ const RecommendedBooksPage: React.FC = () => {
       >
         <Card>
           <CardHeader>
-            <CardTitle className="text-3xl font-serif text-brown-800 flex items-center">
+            <CardTitle className="text-3xl font-custom text-brown-800 flex items-center">
               <BookOpen className="mr-2 h-6 w-6" />
               おすすめの本
             </CardTitle>

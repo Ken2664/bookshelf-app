@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 import { Tag } from '@/types'
 
-import { supabase } from '@/lib/supabase'
+import { supabase } from '../lib/supabase'
 
 import { useAuth } from '@/hooks/useAuth'
 

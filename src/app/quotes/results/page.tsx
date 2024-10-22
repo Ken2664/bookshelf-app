@@ -59,7 +59,7 @@ const QuoteResultsPage: React.FC = () => {
     >
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-serif text-brown-800">検索結果</CardTitle>
+          <CardTitle className="text-2xl font-custom text-brown-800">検索結果</CardTitle>
         </CardHeader>
         <CardContent>
           {quotes.length > 0 ? (

@@ -33,7 +33,7 @@ export default function BooksPage() {
           className="max-w-6xl mx-auto"
         >
           <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
-            <h1 className="text-3xl sm:text-4xl font-serif font-bold text-brown-800 mb-4 sm:mb-0">本の一覧</h1>
+            <h1 className="text-3xl sm:text-4xl font-custom font-bold text-brown-800 mb-4 sm:mb-0">本の一覧</h1>
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
               <Button asChild>
                 <Link href="/books/add">

@@ -32,7 +32,7 @@ export default function Home() {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, type: "spring" }}
-          className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold mb-8 sm:mb-12 text-center text-brown-800"
+          className="text-3xl sm:text-4xl md:text-5xl font-custom font-bold mb-8 sm:mb-12 text-center text-brown-800"
         >
           Bookshelf App へようこそ
         </motion.h1>

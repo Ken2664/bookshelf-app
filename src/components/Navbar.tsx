@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '../lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from "@/components/ui/button"
 import { Book, User, Heart, BookOpen, Quote, LogOut, Menu } from 'lucide-react'
@@ -53,7 +53,7 @@ export default function Navbar() {
       <nav className="bg-gradient-to-r from-amber-100 to-orange-100 shadow-md">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <Link href="/" className="text-brown-800 text-xl font-serif font-bold">Bookshelf App</Link>
+            <Link href="/" className="text-brown-800 text-xl font-custom font-bold">My Bookshelf</Link>
             <Button asChild variant="ghost">
               <Link href="/login">ログイン</Link>
             </Button>
@@ -67,8 +67,8 @@ export default function Navbar() {
     <nav className="bg-gradient-to-r from-amber-100 to-orange-100 shadow-md">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="text-brown-800 text-xl font-serif font-bold">Bookshelf App</Link>
-          <div className="hidden md:flex items-center space-x-4">
+          <Link href="/" className="text-brown-800 text-xl font-custom font-bold">My Bookshelf</Link>
+          <div className="hidden md:flex items-center space-x-4 font-custom font-bold">
             {navLinks.map((link) => (
               <Button key={link.href} asChild variant="ghost" size="sm">
                 <Link href={link.href}>
@@ -100,9 +100,9 @@ export default function Navbar() {
         >
           <div className="px-2 pt-2 pb-3 space-y-1">
             {navLinks.map((link) => (
-              <Button key={link.href} asChild variant="ghost" className="w-full justify-start" size="sm">
+              <Button key={link.href} asChild variant="ghost" className="w-full justify-start font-custom" size="sm">
                 <Link href={link.href}>
-                  <link.icon className="mr-2 h-4 w-4" />
+                  <link.icon className="mr-2 h-4 w-4 " />
                   {link.label}
                 </Link>
               </Button>

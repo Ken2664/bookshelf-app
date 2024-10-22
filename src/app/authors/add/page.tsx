@@ -18,7 +18,7 @@ export default function AddFavoriteAuthorsPage() {
       >
         <Card>
           <CardHeader>
-            <CardTitle className="text-3xl font-serif text-brown-800 flex items-center">
+            <CardTitle className="text-3xl font-custom text-brown-800 flex items-center">
               <User className="mr-2 h-6 w-6" />
               お気に入りの著者
             </CardTitle>

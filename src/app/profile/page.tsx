@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '../../lib/supabase'
 import AuthGuard from '@/components/AuthGuard'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
@@ -116,7 +116,7 @@ const ProfilePage: React.FC = () => {
       >
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-serif text-brown-800">プロフィール編集</CardTitle>
+            <CardTitle className="text-2xl font-custom text-brown-800">プロフィール編集</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">

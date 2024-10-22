@@ -89,7 +89,7 @@ const BookCard: React.FC<BookCardProps> = ({ book: initialBook, onDelete }) => {
       <Card className="overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-amber-100 to-orange-100">
           <CardTitle className="flex justify-between items-start">
-            <span className="text-xl font-serif text-brown-800">{book.title}</span>
+            <span className="text-xl font-custom-yuzu text-brown-800">{book.title}</span>
             <div className="flex space-x-2">
               <Button variant="ghost" size="icon" onClick={toggleFavorite}>
                 <Heart className={`h-5 w-5 ${book.favorite ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} />
@@ -100,9 +100,9 @@ const BookCard: React.FC<BookCardProps> = ({ book: initialBook, onDelete }) => {
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-4">
-          <p className="text-gray-600">著者: {book.author}</p>
-          <p className="text-gray-600">出版社: {book.publisher}</p>
+        <CardContent className="text-xl pt-4 font-custom-yuzu">
+          <p className="text-black">著者: {book.author}</p>
+          <p className="text-black">出版社: {book.publisher}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {book.book_tags && book.book_tags.map((bookTag) => (
               <span key={bookTag.id} className="px-3 py-1 bg-amber-100 text-brown-700 rounded-full text-sm">
@@ -113,7 +113,7 @@ const BookCard: React.FC<BookCardProps> = ({ book: initialBook, onDelete }) => {
           <div className="mt-4">
             <span className="font-semibold text-brown-700">進捗状態: </span>
             <Select value={book.status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] text-lg">
                 <SelectValue>{getStatusText(book.status)}</SelectValue>
               </SelectTrigger>
               <SelectContent>

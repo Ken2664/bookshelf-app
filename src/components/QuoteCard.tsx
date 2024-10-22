@@ -40,12 +40,12 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote }) => {
       transition={{ duration: 0.5 }}
     >
       <Card className="overflow-hidden">
-        <CardContent className="pt-6">
-          <blockquote className="text-lg italic text-gray-700 mb-4">
+        <CardContent className="pt-4 ">
+          <blockquote className="text-2xl italic text-gray-900 font-bold font-custom-yuzu">
             "{quote.content}"
           </blockquote>
         </CardContent>
-        <CardFooter className="bg-amber-50 text-brown-800 h-[45px] flex flex-col justify-center">
+        <CardFooter className="bg-amber-50 text-brown-800 h-[45px] flex flex-col justify-center font-custom-yuzu">
           <div className="flex items-center justify-end w-full mt-5">
             {bookTitle && (
               <div className="flex items-center text-sm mr-4">

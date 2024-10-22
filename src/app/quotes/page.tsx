@@ -76,7 +76,7 @@ const QuotesPage: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="container mx-auto px-4 py-8 bg-gradient-to-br from-amber-50 to-orange-100"
       >
-        <h1 className="text-3xl font-serif text-brown-800 mb-6">セリフ管理</h1>
+        <h1 className="text-3xl font-custom text-brown-800 mb-6">セリフ管理</h1>
         
         {pageError && (
           <Alert variant="destructive" className="mb-4">
@@ -127,7 +127,7 @@ const QuotesPage: React.FC = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-serif text-brown-800">今日のおすすめ</CardTitle>
+            <CardTitle className="text-2xl font-custom text-brown-800">今日のおすすめ</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">

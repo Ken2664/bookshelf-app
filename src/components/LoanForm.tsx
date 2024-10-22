@@ -82,7 +82,7 @@ const LoanForm: React.FC = () => {
     >
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
-          <CardTitle className="text-2xl font-serif text-brown-800">貸出を記録</CardTitle>
+          <CardTitle className="text-2xl font-custom text-brown-800">貸出を記録</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

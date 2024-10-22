@@ -40,7 +40,7 @@ const FavoriteAuthors: React.FC = () => {
     >
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
-          <CardTitle className="text-2xl font-serif text-brown-800">お気に入り作家</CardTitle>
+          <CardTitle className="text-2xl font-custom text-brown-800">お気に入り作家</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center space-x-2 mb-4">
