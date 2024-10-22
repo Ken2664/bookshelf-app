@@ -169,17 +169,11 @@ export default function CameraAddBookPage() {
       >
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-custom text-brown-800">カメラまたは画像アップロードで本を追加</CardTitle>
+            <CardTitle className="text-2xl font-custom text-brown-800">画像アップロードで本を追加</CardTitle>
           </CardHeader>
           <CardContent>
             {!captureMethod && (
               <div className="flex space-x-4 mb-4">
-                {isMobile && (
-                  <Button onClick={() => setCaptureMethod('camera')} variant="outline">
-                    <Camera className="mr-2 h-4 w-4" />
-                    カメラを使用
-                  </Button>
-                )}
                 <Button onClick={() => setCaptureMethod('upload')} variant="outline">
                   <Upload className="mr-2 h-4 w-4" />
                   画像をアップロード
