@@ -19,24 +19,27 @@ const QuoteResultsPage: React.FC = () => {
 
   useEffect(() => {
     const fetchQuotes = async () => {
-      const ids = searchParams.get('ids')
-      if (ids) {
-        const { data, error } = await supabase
-          .from('quotes')
-          .select('*')
-          .in('id', ids.split(','))
+      // searchParamsがnullでないことを確認
+      if (searchParams) {
+        const ids = searchParams.get('ids')
+        if (ids) {
+          const { data, error } = await supabase
+            .from('quotes')
+            .select('*')
+            .in('id', ids.split(','))
 
-        if (error) {
-          console.error('Error fetching quotes:', error)
-        } else {
-          setQuotes(data || [])
+          if (error) {
+            console.error('Error fetching quotes:', error)
+          } else {
+            setQuotes(data || [])
+          }
         }
       }
       setLoading(false)
     }
 
     fetchQuotes()
-  }, [searchParams])
+  }, [searchParams, supabase])
 
   const handleRedirect = () => {
     router.push('/quotes')

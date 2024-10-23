@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { AlertCircle, Book, Calendar, User } from 'lucide-react'
+import { AlertCircle, Book } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 const LoanForm: React.FC = () => {

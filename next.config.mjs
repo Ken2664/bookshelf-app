@@ -2,8 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  experimental: {
-    appDir: true,
+  images: {
+    domains: ['books.google.com', 'res.cloudinary.com'],
   },
 };
 

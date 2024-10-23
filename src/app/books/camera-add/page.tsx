@@ -18,8 +18,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Camera, Upload, Save } from 'lucide-react'
+import { Loader2, Upload, Save } from 'lucide-react'
 
 function dataURItoBlob(dataURI: string): Blob {
   const byteString = atob(dataURI.split(',')[1])

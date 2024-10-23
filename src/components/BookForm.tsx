@@ -14,8 +14,6 @@ import { useAuth } from '@/hooks/useAuth'
 
 import { Tag, Book } from '@/types'
 
-import axios from 'axios'
-
 import { Button } from "@/components/ui/button"
 
 import { Input } from "@/components/ui/input"
@@ -26,7 +24,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 
 import { Label } from "@/components/ui/label"
 
-import { AlertCircle, Upload } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -68,8 +66,6 @@ const BookForm: React.FC = () => {
 
   const [selectedTags, setSelectedTags] = useState<Tag[]>([])
 
-  const [coverImage, setCoverImage] = useState<File | null>(null)
-
   const [coverImageUrl, setCoverImageUrl] = useState<string>('')
 
   const [error, setError] = useState<string | null>(null)
@@ -83,68 +79,6 @@ const BookForm: React.FC = () => {
     const { name, value } = e.target
 
     setFormData(prev => ({ ...prev, [name]: value }))
-
-  }
-
-
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-
-    if (e.target.files && e.target.files[0]) {
-
-      const file = e.target.files[0]
-
-      setCoverImage(file)
-
-      
-
-      try {
-
-        setIsLoading(true)
-
-        const formData = new FormData()
-
-        formData.append('image', file)
-
-
-
-        const response = await axios.post('/api/upload-and-process', formData, {
-
-          headers: { 'Content-Type': 'multipart/form-data' },
-
-        })
-
-
-
-        const { bookInfo, coverUrl } = response.data
-
-        setFormData(prev => ({
-
-          ...prev,
-
-          title: bookInfo.title || prev.title,
-
-          author: bookInfo.author || prev.author,
-
-          publisher: bookInfo.publisher || prev.publisher,
-
-        }))
-
-        setCoverImageUrl(coverUrl)
-
-      } catch (error) {
-
-        console.error('画像処理エラー:', error)
-
-        setError('本の情報の自動取得に失敗しました。手動で入力してください。')
-
-      } finally {
-
-        setIsLoading(false)
-
-      }
-
-    }
 
   }
 
@@ -213,11 +147,7 @@ const BookForm: React.FC = () => {
 
         setSelectedTags([])
 
-        setCoverImage(null)
-
         setCoverImageUrl('')
-
-
 
         router.push('/books')
 
@@ -428,5 +358,7 @@ const BookForm: React.FC = () => {
 
 
 export default BookForm
+
+
 
 

@@ -43,9 +43,6 @@ const QuotesPage: React.FC = () => {
     fetchRandomQuotes()
   }, [user])
 
-  const handleQuoteAdded = () => {
-    setShowForm(false)
-  }
 
   const handleError = (error: string) => {
     setPageError(error)
@@ -74,7 +71,7 @@ const QuotesPage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="container mx-auto px-4 py-8 bg-gradient-to-br from-amber-50 to-orange-100"
+        className="container mx-auto px-4 py-8 bg-gradient-to-br from-amber-50 to-orange-100 min-h-screen"
       >
         <h1 className="text-3xl font-custom text-brown-800 mb-6">セリフ管理</h1>
         

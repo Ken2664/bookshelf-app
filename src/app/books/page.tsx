@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { PlusCircle, Camera } from 'lucide-react'
 
 export default function BooksPage() {
-  const { books, loading, searchResults, searchBooks } = useBooks()
+  const { books, loading} = useBooks()
   const [displayedBooks, setDisplayedBooks] = useState<Book[]>([])
 
   useEffect(() => {

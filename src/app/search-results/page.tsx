@@ -7,8 +7,7 @@ import BookCard from '@/components/BookCard'
 import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
-import { BookStatus, Tag } from '@/types'
-import TagInput from '@/components/TagInput'
+import { BookStatus } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -17,12 +16,11 @@ import { Loader2, ArrowLeft, Filter } from 'lucide-react'
 const SearchResultsPage: React.FC = () => {
   const { searchResults, loading, searchBooks, deleteBook } = useBooks()
   const searchParams = useSearchParams()
-  const title = searchParams.get('title') || ''
-  const author = searchParams.get('author') || ''
-  const tagIds = searchParams.get('tags')?.split(',').filter(Boolean) || []
+  const title = searchParams?.get('title') || ''
+  const author = searchParams?.get('author') || ''
+  const tagIds = searchParams?.get('tags')?.split(',').filter(Boolean) || []
   const { user, loading: authLoading } = useAuth()
   const [statusFilter, setStatusFilter] = useState<BookStatus | 'all'>('all')
-  const [selectedTags, setSelectedTags] = useState<Tag[]>([])
   const [hasSearched, setHasSearched] = useState(false)
 
   const performSearch = useCallback(() => {

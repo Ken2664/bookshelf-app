@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Book, BookTag, FavoriteAuthor, BookStatus, Tag } from '../types';
+import { Book, FavoriteAuthor, BookStatus, Tag } from '../types';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 
@@ -242,13 +242,13 @@ export const useBooks = () => {
         console.log(`検索結果: ${data.length}件の本が見つかりました`);
         // タグでフィルタリングされた結果のみを返す
         const filteredData = tags.length > 0
-          ? data.filter(book => book.book_tags.some((bt: any) => tags.some(t => t.id === bt.tag.id)))
+          ? data.filter(book => book.book_tags.some((bt: { tag: { id: string } }) => tags.some(t => t.id === bt.tag.id)))
           : data;
         
         // タグの名前を含む形式に変換
         const booksWithTagNames = filteredData.map(book => ({
           ...book,
-          tags: book.book_tags.map((bt: any) => bt.tag.name)
+          tags: book.book_tags.map((bt: { tag: { name: string } }) => bt.tag.name)
         }));
         
         setSearchResults(booksWithTagNames);

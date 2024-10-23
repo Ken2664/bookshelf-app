@@ -60,7 +60,6 @@ export const runDifyWorkflow = async (imageUrl: string): Promise<BookInfo> => {
         }
       ]
     };
-
     console.log('Sending request to Dify API:', JSON.stringify(payload));
     const response = await axios.post<DifyResponse>(url, payload, { headers });
     console.log('Dify API response:', JSON.stringify(response.data, null, 2));
@@ -71,8 +70,8 @@ export const runDifyWorkflow = async (imageUrl: string): Promise<BookInfo> => {
     if (outputText) {
       try {
         bookInfo = JSON.parse(outputText);
-      } catch (parseError) {
-        console.error('Failed to parse Dify response:', outputText);
+      } catch (error) {
+        console.error('Dify応答の解析に失敗しました:', outputText, error);
         bookInfo = {
           title: outputText,
           author: '',
@@ -80,7 +79,7 @@ export const runDifyWorkflow = async (imageUrl: string): Promise<BookInfo> => {
         };
       }
     } else {
-      console.error('Unexpected Dify response format:', response.data);
+      console.error('予期せぬDify応答フォーマット:', response.data);
       throw new Error('Dify APIからの応答が不正な形式です');
     }
     

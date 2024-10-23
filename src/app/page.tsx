@@ -2,7 +2,6 @@
 
 import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
-import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Book, Users, Search, Heart, BookOpen } from 'lucide-react'
 

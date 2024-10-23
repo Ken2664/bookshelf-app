@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react'
 import { Camera, XCircle, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import Image from 'next/image'
 
 interface CameraCaptureProps {
   onCapture: (imageBase64: string) => void
@@ -115,10 +116,11 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture }) => {
 
         {capturedImage && (
           <div className="space-y-4">
-            <img
+            <Image
               src={capturedImage}
-              alt="Captured"
-              className="w-full h-auto rounded-lg"
+              alt="Captured image"
+              width={300}  // 適切な幅を指定
+              height={200} // 適切な高さを指定
             />
             <div className="flex justify-center space-x-4">
               <Button onClick={confirmCapture} variant="default">

@@ -31,7 +31,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote }) => {
     };
 
     fetchBookTitle();
-  }, [quote.book_id]);
+  }, [quote.book_id, supabase]);
 
   return (
     <motion.div
@@ -41,9 +41,11 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote }) => {
     >
       <Card className="overflow-hidden">
         <CardContent className="pt-4 ">
-          <blockquote className="text-2xl italic text-gray-900 font-bold font-custom-yuzu">
-            "{quote.content}"
-          </blockquote>
+          {quote.content && (
+            <p className="text-sm text-gray-500 font-custom-yuzu">
+              &ldquo;{quote.content}&rdquo;
+            </p>
+          )}
         </CardContent>
         <CardFooter className="bg-amber-50 text-brown-800 h-[45px] flex flex-col justify-center font-custom-yuzu">
           <div className="flex items-center justify-end w-full mt-5">

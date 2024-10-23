@@ -69,7 +69,7 @@ const ProfilePage: React.FC = () => {
 
     try {
       console.log('Upserting user data...')
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('users')
         .upsert({ 
           user_id: user.id, 
