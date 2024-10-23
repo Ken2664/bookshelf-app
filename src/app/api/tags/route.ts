@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { Database } from '@/types';
@@ -6,27 +6,32 @@ import { Database } from '@/types';
 // Supabaseクライアントの型を定義
 type SupabaseClient = ReturnType<typeof createRouteHandlerClient<Database>>;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export async function GET() {
   const supabase = createRouteHandlerClient<Database>({ cookies });
 
   // セッションチェック
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  switch (req.method) {
-    case 'GET':
-      return getTags(req, res, supabase, session.user.id);
-    case 'POST':
-      return createTag(req, res, supabase, session.user.id);
-    default:
-      res.setHeader('Allow', ['GET', 'POST']);
-      return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
+  return getTags(supabase, session.user.id);
 }
 
-const getTags = async (req: NextApiRequest, res: NextApiResponse, supabase: SupabaseClient, userId: string) => {
+export async function POST(request: NextRequest) {
+  const supabase = createRouteHandlerClient<Database>({ cookies });
+
+  // セッションチェック
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const body = await request.json();
+  return createTag(body, supabase, session.user.id);
+}
+
+const getTags = async (supabase: SupabaseClient, userId: string) => {
   try {
     const { data, error } = await supabase
       .from('tags')
@@ -36,18 +41,18 @@ const getTags = async (req: NextApiRequest, res: NextApiResponse, supabase: Supa
 
     if (error) throw error;
 
-    return res.status(200).json(data);
+    return NextResponse.json(data);
   } catch (error) {
     console.error('Error fetching tags:', error);
-    return res.status(500).json({ error: 'An error occurred while fetching tags' });
+    return NextResponse.json({ error: 'An error occurred while fetching tags' }, { status: 500 });
   }
 };
 
-const createTag = async (req: NextApiRequest, res: NextApiResponse, supabase: SupabaseClient, userId: string) => {
-  const { name } = req.body;
+const createTag = async (body: { name: string }, supabase: SupabaseClient, userId: string) => {
+  const { name } = body;
 
   if (!name) {
-    return res.status(400).json({ error: 'Missing tag name' });
+    return NextResponse.json({ error: 'Missing tag name' }, { status: 400 });
   }
 
   try {
@@ -58,9 +63,9 @@ const createTag = async (req: NextApiRequest, res: NextApiResponse, supabase: Su
 
     if (error) throw error;
 
-    return res.status(201).json(data[0]);
+    return NextResponse.json(data[0], { status: 201 });
   } catch (error) {
     console.error('Error creating tag:', error);
-    return res.status(500).json({ error: 'An error occurred while creating the tag' });
+    return NextResponse.json({ error: 'An error occurred while creating the tag' }, { status: 500 });
   }
 };

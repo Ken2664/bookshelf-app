@@ -3,6 +3,9 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { Database } from '@/types';
 
+// Supabaseクライアントの型を定義
+//type SupabaseClient = ReturnType<typeof createRouteHandlerClient<Database>>;
+
 export async function GET(request: NextRequest) {
   const supabase = createRouteHandlerClient<Database>({ cookies });
 
@@ -12,34 +15,25 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const url = new URL(request.url);
-  const title = url.searchParams.get('title') || '';
-  const author = url.searchParams.get('author') || '';
+  // 動的なサーバーレンダリングを使用
+  const searchParams = new URL(request.url).searchParams;
+  const query = searchParams.get('query');
 
-  let query = supabase
-    .from('books')
-    .select('*')
-    .eq('user_id', session.user.id);
-
-  if (title) {
-    query = query.ilike('title', `%${title}%`);
-  }
-
-  if (author) {
-    query = query.ilike('author', `%${author}%`);
+  if (!query) {
+    return NextResponse.json({ error: 'Missing search query' }, { status: 400 });
   }
 
   try {
-    const { data, error } = await query;
+    const { data, error } = await supabase
+      .from('search_results')
+      .select('*')
+      .ilike('name', `%${query}%`);
 
-    if (error) {
-      console.error('Error fetching books:', error);
-      return NextResponse.json({ error: 'An error occurred while fetching books' }, { status: 500 });
-    }
+    if (error) throw error;
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Unexpected error:', error);
-    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
+    console.error('Error fetching search results:', error);
+    return NextResponse.json({ error: 'An error occurred while fetching search results' }, { status: 500 });
   }
 }

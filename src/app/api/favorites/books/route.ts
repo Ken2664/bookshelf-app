@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextResponse, NextRequest } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { Database } from '@/types';
@@ -6,45 +6,87 @@ import { Database } from '@/types';
 // Supabaseクライアントの型を定義
 type SupabaseClient = ReturnType<typeof createRouteHandlerClient<Database>>;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export async function GET() {
   const supabase = createRouteHandlerClient<Database>({ cookies });
 
   // セッションチェック
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  switch (req.method) {
-    case 'PUT':
-      return updateFavoriteStatus(req, res, supabase, session.user.id);
-    default:
-      res.setHeader('Allow', ['PUT']);
-      return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
+  return getFavoriteBooks(supabase, session.user.id);
 }
 
-const updateFavoriteStatus = async (req: NextApiRequest, res: NextApiResponse, supabase: SupabaseClient, userId: string) => {
-  const { id, favorite } = req.body;
+export async function POST(request: NextRequest) {
+  const supabase = createRouteHandlerClient<Database>({ cookies });
 
-  if (!id || typeof favorite !== 'boolean') {
-    return res.status(400).json({ error: 'Missing or invalid fields' });
+  // セッションチェック
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const body = await request.json();
+  return createFavoriteBook(body, supabase, session.user.id);
+}
+
+export async function DELETE(request: NextRequest) {
+  const supabase = createRouteHandlerClient<Database>({ cookies });
+
+  // セッションチェック
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const body = await request.json();
+  return deleteFavoriteBook(body, supabase, session.user.id);
+}
+
+// getFavoriteBooks, createFavoriteBook, deleteFavoriteBook 関数の実装...
+
+async function getFavoriteBooks(supabase: SupabaseClient, userId: string) {
   const { data, error } = await supabase
-    .from('books')
-    .update({ favorite })
-    .eq('id', id)
-    .eq('user_id', userId)
-    .select();
+    .from('favorite_books')
+    .select('*')
+    .eq('user_id', userId);
 
   if (error) {
-    return res.status(500).json({ error: error.message });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  if (data.length === 0) {
-    return res.status(404).json({ error: 'Book not found or you do not have permission to update it' });
+  return NextResponse.json(data);
+}
+
+// createFavoriteBook と deleteFavoriteBook 関数も同様に実装してください
+
+async function createFavoriteBook(body: { book_id: string }, supabase: SupabaseClient, userId: string) {
+  const { data, error } = await supabase
+    .from('favorite_books')
+    .insert({ user_id: userId, book_id: body.book_id })
+    .select()
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return res.status(200).json(data[0]);
-};
+  return NextResponse.json(data);
+}
+
+// deleteFavoriteBook 関数も同様に実装してください
+
+async function deleteFavoriteBook(body: { book_id: string }, supabase: SupabaseClient, userId: string) {
+  const { error } = await supabase
+    .from('favorite_books')
+    .delete()
+    .eq('user_id', userId)
+    .eq('book_id', body.book_id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}

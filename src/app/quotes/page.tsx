@@ -41,7 +41,7 @@ const QuotesPage: React.FC = () => {
     }
 
     fetchRandomQuotes()
-  }, [user])
+  }, [user, supabase])
 
 
   const handleError = (error: string) => {

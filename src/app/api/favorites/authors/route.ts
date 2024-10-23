@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextResponse, NextRequest } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { Database } from '@/types';
@@ -6,29 +6,45 @@ import { Database } from '@/types';
 // Supabaseクライアントの型を定義
 type SupabaseClient = ReturnType<typeof createRouteHandlerClient<Database>>;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export async function GET() {
   const supabase = createRouteHandlerClient<Database>({ cookies });
 
   // セッションチェック
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  switch (req.method) {
-    case 'GET':
-      return getFavoriteAuthors(req, res, supabase, session.user.id);
-    case 'POST':
-      return createFavoriteAuthor(req, res, supabase, session.user.id);
-    case 'DELETE':
-      return deleteFavoriteAuthor(req, res, supabase, session.user.id);
-    default:
-      res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
-      return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
+  return getFavoriteAuthors(supabase, session.user.id);
 }
 
-const getFavoriteAuthors = async (req: NextApiRequest, res: NextApiResponse, supabase: SupabaseClient, userId: string) => {
+export async function POST(request: NextRequest) {
+  const supabase = createRouteHandlerClient<Database>({ cookies });
+
+  // セッションチェック
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const body = await request.json();
+  return createFavoriteAuthor(body, supabase, session.user.id);
+}
+
+export async function DELETE(request: NextRequest) {
+  const supabase = createRouteHandlerClient<Database>({ cookies });
+
+  // セッションチェック
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const body = await request.json();
+  return deleteFavoriteAuthor(body, supabase, session.user.id);
+}
+
+const getFavoriteAuthors = async (supabase: SupabaseClient, userId: string) => {
   try {
     const { data, error } = await supabase
       .from('favorite_authors')
@@ -38,18 +54,18 @@ const getFavoriteAuthors = async (req: NextApiRequest, res: NextApiResponse, sup
 
     if (error) throw error;
 
-    return res.status(200).json(data);
+    return NextResponse.json(data);
   } catch (error) {
     console.error('Error fetching favorite authors:', error);
-    return res.status(500).json({ error: 'An error occurred while fetching favorite authors' });
+    return NextResponse.json({ error: 'An error occurred while fetching favorite authors' }, { status: 500 });
   }
 };
 
-const createFavoriteAuthor = async (req: NextApiRequest, res: NextApiResponse, supabase: SupabaseClient, userId: string) => {
-  const { author_name } = req.body;
+const createFavoriteAuthor = async (body: { author_name: string }, supabase: SupabaseClient, userId: string) => {
+  const { author_name } = body;
 
   if (!author_name) {
-    return res.status(400).json({ error: 'Missing author_name' });
+    return NextResponse.json({ error: 'Missing author_name' }, { status: 400 });
   }
 
   try {
@@ -60,18 +76,18 @@ const createFavoriteAuthor = async (req: NextApiRequest, res: NextApiResponse, s
 
     if (error) throw error;
 
-    return res.status(201).json(data[0]);
+    return NextResponse.json(data[0], { status: 201 });
   } catch (error) {
     console.error('Error creating favorite author:', error);
-    return res.status(500).json({ error: 'An error occurred while creating favorite author' });
+    return NextResponse.json({ error: 'An error occurred while creating favorite author' }, { status: 500 });
   }
 };
 
-const deleteFavoriteAuthor = async (req: NextApiRequest, res: NextApiResponse, supabase: SupabaseClient, userId: string) => {
-  const { id } = req.body;
+const deleteFavoriteAuthor = async (body: { id: number }, supabase: SupabaseClient, userId: string) => {
+  const { id } = body;
 
   if (!id) {
-    return res.status(400).json({ error: 'Missing id' });
+    return NextResponse.json({ error: 'Missing id' }, { status: 400 });
   }
 
   try {
@@ -84,12 +100,12 @@ const deleteFavoriteAuthor = async (req: NextApiRequest, res: NextApiResponse, s
     if (error) throw error;
 
     if (data === null) {
-      return res.status(404).json({ error: 'Favorite author not found or you do not have permission to delete it' });
+      return NextResponse.json({ error: 'Favorite author not found or you do not have permission to delete it' }, { status: 404 });
     }
 
-    return res.status(204).end();
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
     console.error('Error deleting favorite author:', error);
-    return res.status(500).json({ error: 'An error occurred while deleting favorite author' });
+    return NextResponse.json({ error: 'An error occurred while deleting favorite author' }, { status: 500 });
   }
 };
