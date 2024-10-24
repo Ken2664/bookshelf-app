@@ -43,6 +43,7 @@ async function compressImage(file: File): Promise<File> {
     return compressedFile
   } catch (error) {
     throw new Error('画像の圧縮に失敗しました。')
+    console.error('本の認識に失敗しました:', error)
   }
 }
 
