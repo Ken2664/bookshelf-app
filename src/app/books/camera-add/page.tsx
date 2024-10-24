@@ -49,6 +49,7 @@ export default function CameraAddBookPage() {
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const { user } = useAuth()
   const [isMobile, setIsMobile] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
     const checkMobile = () => {
@@ -65,6 +66,7 @@ export default function CameraAddBookPage() {
 
   const handleCapture = async (imageBase64: string) => {
     setLoading(true)
+    setErrorMessage(null) // エラーメッセージをリセット
     try {
       const formData = new FormData()
       formData.append('image', dataURItoBlob(imageBase64), 'image.jpg')
@@ -86,13 +88,11 @@ export default function CameraAddBookPage() {
       console.error('本の認識に失敗しました:', error)
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data?.error || error.message
-        console.error('Response data:', error.response?.data)
-        console.error('Response status:', error.response?.status)
-        alert(`本の認識に失敗しました: ${typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage)}`)
+        setErrorMessage(`本の認識に失敗しました: ${typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage)}`)
       } else if (error instanceof Error) {
-        alert(`本の認識に失敗しました: ${error.message}`)
+        setErrorMessage(`本の認識に失敗しました: ${error.message}`)
       } else {
-        alert('本の認識に失敗しました。もう一度お試しください。')
+        setErrorMessage('本の認識に失敗しました。もう一度お試しください。')
       }
     } finally {
       setLoading(false)
@@ -176,6 +176,11 @@ export default function CameraAddBookPage() {
             <CardTitle className="text-2xl font-custom text-brown-800">画像アップロードで本を追加</CardTitle>
           </CardHeader>
           <CardContent>
+            {errorMessage && (
+              <div className="text-red-500 mb-4">
+                {errorMessage}
+              </div>
+            )}
             {!captureMethod && (
               <div className="flex space-x-4 mb-4">
                 <Button onClick={() => setCaptureMethod('upload')} variant="outline">
