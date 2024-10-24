@@ -33,23 +33,59 @@ function dataURItoBlob(dataURI: string): Blob {
 }
 
 async function compressImage(file: File): Promise<File> {
-  const options = {
-    maxSizeMB: 1,
-    maxWidthOrHeight: 1024,
+  // 初期圧縮オプション
+  const initialOptions = {
+    maxSizeMB: 0.5, // 最大サイズを0.5MBに制限
+    maxWidthOrHeight: 800, // 最大幅/高さを800pxに制限
     useWebWorker: true,
-    fileType: 'image/jpeg', // 強制的にJPEGとして保存
-    initialQuality: 0.8,    // 初期品質を80%に設定
+    fileType: 'image/jpeg',
+    initialQuality: 0.7, // 初期品質を70%に設定
   }
   
   try {
-    const compressedFile = await imageCompression(file, options)
-    // 圧縮後のファイル名を元のファイル名に基づいて設定
+    let compressedFile = await imageCompression(file, initialOptions)
+    
+    // ファイルサイズが0.5MBを超えている場合、さらに圧縮を試みる
+    if (compressedFile.size > 0.5 * 1024 * 1024) {
+      console.log('追加圧縮が必要:', {
+        currentSize: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`
+      })
+      
+      const secondaryOptions = {
+        ...initialOptions,
+        maxWidthOrHeight: 600, // さらに解像度を下げる
+        initialQuality: 0.6,   // 品質をさらに下げる
+      }
+      
+      compressedFile = await imageCompression(compressedFile, secondaryOptions)
+      
+      // それでもまだ大きい場合は最終手段
+      if (compressedFile.size > 0.5 * 1024 * 1024) {
+        const finalOptions = {
+          ...initialOptions,
+          maxWidthOrHeight: 400,
+          initialQuality: 0.5,
+        }
+        compressedFile = await imageCompression(compressedFile, finalOptions)
+      }
+    }
+
+    console.log('圧縮結果:', {
+      originalSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
+      compressedSize: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`,
+      compressionRatio: `${((1 - compressedFile.size / file.size) * 100).toFixed(1)}%`
+    })
+
     return new File([compressedFile], file.name, {
       type: 'image/jpeg',
       lastModified: Date.now(),
     })
   } catch (error) {
-    console.error('画像圧縮エラー:', error)
+    console.error('画像圧縮エラー:', {
+      error,
+      originalFileSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
+      originalFileType: file.type
+    })
     throw new Error('画像の圧縮に失敗しました。')
   }
 }
