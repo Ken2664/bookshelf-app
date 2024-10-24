@@ -33,7 +33,8 @@
     "sse.js": "^2.5.0",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+    "image-compressor.js": "^1.1.4"
   },
   "devDependencies": {
     "@types/formidable": "^3.4.5",

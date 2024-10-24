@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Loader2, Upload, Save } from 'lucide-react'
+import imageCompression from 'browser-image-compression'
 
 function dataURItoBlob(dataURI: string): Blob {
   const byteString = atob(dataURI.split(',')[1])
@@ -29,6 +30,20 @@ function dataURItoBlob(dataURI: string): Blob {
     ia[i] = byteString.charCodeAt(i)
   }
   return new Blob([ab], { type: mimeString })
+}
+
+async function compressImage(file: File): Promise<File> {
+  const options = {
+    maxSizeMB: 1, // 最大サイズを1MBに設定
+    maxWidthOrHeight: 1024, // 最大幅または高さを1024pxに制限
+    useWebWorker: true,
+  }
+  try {
+    const compressedFile = await imageCompression(file, options)
+    return compressedFile
+  } catch (error) {
+    throw new Error('画像の圧縮に失敗しました。')
+  }
 }
 
 export default function CameraAddBookPage() {
@@ -66,13 +81,21 @@ export default function CameraAddBookPage() {
 
   const handleCapture = async (imageBase64: string) => {
     setLoading(true)
-    setErrorMessage(null) // エラーメッセージをリセット
+    setErrorMessage(null)
     try {
+      const blob = dataURItoBlob(imageBase64)
+      // ファイルサイズをチェック
+      if (blob.size > 5 * 1024 * 1024) { // 5MB制限
+        throw new Error('画像サイズが大きすぎます。5MB以下の画像を使用してください。')
+      }
+
       const formData = new FormData()
-      formData.append('image', dataURItoBlob(imageBase64), 'image.jpg')
+      formData.append('image', blob, 'image.jpg')
 
       const response = await axios.post('/api/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        // タイムアウト設定を追加
+        timeout: 30000, // 30秒
       })
 
       const { bookInfo: recognizedInfo, coverUrl } = response.data
@@ -86,13 +109,10 @@ export default function CameraAddBookPage() {
       setPreviewImage(coverUrl)
     } catch (error) {
       console.error('本の認識に失敗しました:', error)
-      if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.error || error.message
-        setErrorMessage(`本の認識に失敗しました: ${typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage, null, 2)}`)
-      } else if (error instanceof Error) {
-        setErrorMessage(`本の認識に失敗しました: ${error.message}`)
+      if (error instanceof Error) {
+        setErrorMessage(`エラー: ${error.message}`)
       } else {
-        setErrorMessage('本の認識に失敗しました。もう一度お試しください。')
+        setErrorMessage('画像のアップロードに失敗しました。もう一度お試しください。')
       }
     } finally {
       setLoading(false)
@@ -102,13 +122,28 @@ export default function CameraAddBookPage() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const base64String = reader.result as string
-        setPreviewImage(base64String)
-        handleCapture(base64String)
+      try {
+        setLoading(true)
+        // 画像を圧縮
+        const compressedFile = await compressImage(file)
+        
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          const base64String = reader.result as string
+          setPreviewImage(base64String)
+          handleCapture(base64String)
+        }
+        reader.onerror = (error) => {
+          console.error('画像の読み込みに失敗しました:', error)
+          setErrorMessage('画像の読み込みに失敗しました。もう一度お試しください。')
+          setLoading(false)
+        }
+        reader.readAsDataURL(compressedFile)
+      } catch (error) {
+        console.error('画像の処理に失敗しました:', error)
+        setErrorMessage('画像の処理に失敗しました。もう一度お試しください。')
+        setLoading(false)
       }
-      reader.readAsDataURL(file)
     }
   }
 
