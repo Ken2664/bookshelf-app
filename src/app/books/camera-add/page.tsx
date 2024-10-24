@@ -73,16 +73,7 @@ async function getRotatedImage(file: File): Promise<File> {
 }
 
 // 画像の寸法を取得する関数を追加
-async function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
-  return new Promise((resolve, reject) => {
-    const img = new window.Image(); // windowを明示的に指定
-    img.onload = () => {
-      resolve({ width: img.width, height: img.height });
-    };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
-  });
-}
+
 
 export default function CameraAddBookPage() {
   const [bookInfo, setBookInfo] = useState<Partial<Book>>({
