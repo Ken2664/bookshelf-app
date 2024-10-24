@@ -18,6 +18,9 @@ const config = {
       },
     },
     extend: {
+      screens: {
+        xl: "1280px", // 明示的にxlのブレークポイントを設定
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

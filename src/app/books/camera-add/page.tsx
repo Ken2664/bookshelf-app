@@ -85,9 +85,10 @@ export default function CameraAddBookPage() {
     } catch (error) {
       console.error('本の認識に失敗しました:', error)
       if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.error || error.message
         console.error('Response data:', error.response?.data)
         console.error('Response status:', error.response?.status)
-        alert(`本の認識に失敗しました: ${JSON.stringify(error.response?.data?.error) || error.message}`)
+        alert(`本の認識に失敗しました: ${typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage)}`)
       } else if (error instanceof Error) {
         alert(`本の認識に失敗しました: ${error.message}`)
       } else {
