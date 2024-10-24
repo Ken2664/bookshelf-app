@@ -85,6 +85,15 @@ export default function CameraAddBookPage() {
     setErrorMessage(null)
     try {
       const blob = dataURItoBlob(imageBase64)
+      // デバッグ情報の出力
+      console.log('Debug info:', {
+        blobSize: `${(blob.size / 1024 / 1024).toFixed(2)}MB`,
+        isMobile: isMobile,
+        imageBase64Length: `${(imageBase64.length / 1024 / 1024).toFixed(2)}MB`,
+        userAgent: navigator.userAgent,
+        blobType: blob.type
+      })
+
       // ファイルサイズをチェック
       if (blob.size > 5 * 1024 * 1024) { // 5MB制限
         throw new Error('画像サイズが大きすぎます。5MB以下の画像を使用してください。')
@@ -95,8 +104,12 @@ export default function CameraAddBookPage() {
 
       const response = await axios.post('/api/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        // タイムアウト設定を追加
         timeout: 30000, // 30秒
+        onUploadProgress: (progressEvent) => {
+          // アップロードの進捗をログに出力
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total!)
+          console.log(`アップロード進捗: ${percentCompleted}%`)
+        }
       })
 
       const { bookInfo: recognizedInfo, coverUrl } = response.data
@@ -109,8 +122,19 @@ export default function CameraAddBookPage() {
       }))
       setPreviewImage(coverUrl)
     } catch (error) {
-      console.error('本の認識に失敗しました:', error)
-      if (error instanceof Error) {
+      console.error('Upload error details:', {
+        error,
+        isMobile,
+        imageBase64Length: `${(imageBase64.length / 1024 / 1024).toFixed(2)}MB`,
+        userAgent: navigator.userAgent,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorStack: error instanceof Error ? error.stack : null
+      })
+
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.error || error.message
+        setErrorMessage(`アップロードエラー: ${typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage)}`)
+      } else if (error instanceof Error) {
         setErrorMessage(`エラー: ${error.message}`)
       } else {
         setErrorMessage('画像のアップロードに失敗しました。もう一度お試しください。')
