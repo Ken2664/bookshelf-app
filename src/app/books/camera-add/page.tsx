@@ -72,6 +72,18 @@ async function getRotatedImage(file: File): Promise<File> {
   })
 }
 
+// 画像の寸法を取得する関数を追加
+async function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image(); // windowを明示的に指定
+    img.onload = () => {
+      resolve({ width: img.width, height: img.height });
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 export default function CameraAddBookPage() {
   const [bookInfo, setBookInfo] = useState<Partial<Book>>({
     title: '',
@@ -195,68 +207,88 @@ export default function CameraAddBookPage() {
       progress: 0,
       originalSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`
     });
-
-    const compress = async (inputFile: File, attempt: number = 1): Promise<File> => {
-      const getCompressionOptions = (attempt: number) => {
-        // 試行回数に応じて徐々に強い圧縮を適用
+  
+    // 圧縮設定の段階を定義
+    const compressionStages = [
+      { maxWidthOrHeight: 1600, quality: 0.8, maxSizeMB: 1.0 },    // Stage 1: 緩やかな圧縮
+      { maxWidthOrHeight: 1200, quality: 0.7, maxSizeMB: 0.75 },   // Stage 2: 中程度の圧縮
+      { maxWidthOrHeight: 800, quality: 0.6, maxSizeMB: 0.5 },     // Stage 3: 強めの圧縮
+      { maxWidthOrHeight: 600, quality: 0.5, maxSizeMB: 0.3 }      // Stage 4: 最大圧縮
+    ];
+  
+    // 圧縮処理を実行する関数
+    const compress = async (inputFile: File, stageIndex: number = 0): Promise<File> => {
+      if (stageIndex >= compressionStages.length) {
+        throw new Error('画像の圧縮が要件を満たせませんでした。より小さい画像を使用してください。');
+      }
+  
+      const stage = compressionStages[stageIndex];
+      
+      setCompressionStatus(prev => ({
+        ...prev,
+        stage: `圧縮処理 ${stageIndex + 1}/${compressionStages.length}`,
+        progress: Math.round((stageIndex + 0.5) * (100 / compressionStages.length))
+      }));
+  
+      try {
+        // 圧縮オプションを設定
         const options = {
-          maxSizeMB: 0.3,  // 300KB以下を目標に
+          maxSizeMB: stage.maxSizeMB,
+          maxWidthOrHeight: stage.maxWidthOrHeight,
           useWebWorker: true,
           fileType: 'image/jpeg',
-          initialQuality: 0.7,
+          initialQuality: stage.quality,
+          alwaysKeepResolution: false,
+          signal: new AbortController().signal // 必要に応じて中断可能に
         };
-
-        switch (attempt) {
-          case 1:
-            return { ...options, maxWidthOrHeight: 1200, initialQuality: 0.7 };
-          case 2:
-            return { ...options, maxWidthOrHeight: 800, initialQuality: 0.6 };
-          case 3:
-            return { ...options, maxWidthOrHeight: 600, initialQuality: 0.5 };
-          default:
-            return { ...options, maxWidthOrHeight: 400, initialQuality: 0.4 };
+  
+        const compressedFile = await imageCompression(inputFile, options);
+        
+        // 圧縮結果をログ出力
+        console.log(`圧縮ステージ ${stageIndex + 1}:`, {
+          入力サイズ: `${(inputFile.size / 1024 / 1024).toFixed(2)}MB`,
+          出力サイズ: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`,
+          圧縮率: `${((1 - compressedFile.size / inputFile.size) * 100).toFixed(1)}%`,
+          品質: stage.quality,
+          最大サイズ: `${stage.maxWidthOrHeight}px`
+        });
+  
+        // 画像の寸法を取得
+        const dimensions = await getImageDimensions(compressedFile);
+        console.log('圧縮後の画像サイズ:', dimensions);
+  
+        // 目標サイズより大きい場合は次のステージに進む
+        if (compressedFile.size > stage.maxSizeMB * 1024 * 1024) {
+          return compress(inputFile, stageIndex + 1);
         }
-      };
-
-      const options = getCompressionOptions(attempt);
-      
-      setCompressionStatus(prev => ({
-        ...prev,
-        stage: `圧縮処理 ${attempt}/4...`,
-        progress: Math.min((attempt - 1) * 25 + 25, 100)
-      }));
-
-      const compressedFile = await imageCompression(inputFile, options);
-      
-      // 圧縮後のサイズをログ出力
-      console.log(`圧縮試行 ${attempt}:`, {
-        size: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`,
-        width: await getImageDimensions(compressedFile).then(dim => dim.width),
-        height: await getImageDimensions(compressedFile).then(dim => dim.height),
-        quality: options.initialQuality
-      });
-
-      // 目標サイズ（300KB）より大きい場合は再圧縮
-      if (compressedFile.size > 0.3 * 1024 * 1024 && attempt < 4) {
-        return compress(compressedFile, attempt + 1);
+  
+        setCompressionStatus(prev => ({
+          ...prev,
+          stage: '圧縮完了',
+          progress: 100,
+          currentSize: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`
+        }));
+  
+        return compressedFile;
+      } catch (error) {
+        // エラーが発生した場合、次のステージを試行
+        console.warn(`ステージ ${stageIndex + 1} での圧縮に失敗:`, error);
+        return compress(inputFile, stageIndex + 1);
       }
-
-      return compressedFile;
     };
-
+  
+    // 入力ファイルの事前チェック
+    const fileSizeMB = file.size / (1024 * 1024);
+    if (fileSizeMB > 20) {
+      throw new Error('入力ファイルが大きすぎます（最大20MB）');
+    }
+  
     try {
-      const finalFile = await compress(file);
-      
-      setCompressionStatus(prev => ({
-        ...prev,
-        stage: '圧縮完了',
-        progress: 100,
-        currentSize: `${(finalFile.size / 1024 / 1024).toFixed(2)}MB`
-      }));
-
-      return finalFile;
+      // 画像の向きを修正してから圧縮を開始
+      const rotatedFile = await getRotatedImage(file);
+      return await compress(rotatedFile);
     } catch (error) {
-      console.error('圧縮エラー:', error);
+      console.error('画像圧縮エラー:', error);
       setCompressionStatus(prev => ({
         ...prev,
         stage: '圧縮エラー',
@@ -264,20 +296,6 @@ export default function CameraAddBookPage() {
       }));
       throw error;
     }
-  };
-
-  // 画像のサイズを取得するヘルパー関数を追加
-  const getImageDimensions = (file: File): Promise<{ width: number; height: number }> => {
-    return new Promise((resolve) => {
-      const img = new window.Image(); // windowを明示的に指定
-      img.onload = () => {
-        resolve({
-          width: img.width,
-          height: img.height
-        });
-      };
-      img.src = URL.createObjectURL(file);
-    });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
