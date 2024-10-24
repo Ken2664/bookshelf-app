@@ -78,7 +78,7 @@ export default function Navbar() {
               </Button>
             ))}
             <Button variant="destructive" size="sm" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut className="mr-2 h-4 w-4 font-bold" />
               ログアウト
             </Button>
           </div>
@@ -108,7 +108,7 @@ export default function Navbar() {
               </Button>
             ))}
             <Button variant="destructive" size="sm" onClick={handleLogout} className="w-full justify-start">
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut className="mr-2 h-4 w-4 font-bold" />
               ログアウト
             </Button>
           </div>

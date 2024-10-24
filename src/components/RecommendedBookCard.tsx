@@ -50,7 +50,7 @@ const RecommendedBookCard: React.FC<RecommendedBookCardProps> = ({ title, author
           </div>
         </CardHeader>
         <CardContent className="p-4">
-          <CardTitle className="text-xl font-custom text-brown-800 mb-2">{title}</CardTitle>
+          <CardTitle className="text-xl font-custom-yuzu text-brown-800 mb-2">{title}</CardTitle>
           <div className="space-y-2">
             <p className="text-gray-600 flex items-center">
               <User className="w-4 h-4 mr-2" />

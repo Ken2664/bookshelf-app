@@ -20,6 +20,9 @@ export default function LoginPage() {
     setError(null)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
+      options: {
+        redirectTo: 'https://mybookshelf-99qid87gz-kensukes-projects-5c8479b8.vercel.app/' // 本番環境のURLを指定
+      }
     })
     if (error) {
       setError(error.message)

@@ -20,6 +20,14 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Features of Bookshelf App
+
+- **本の表紙写真からの登録**: 本の表紙をスキャンするだけで簡単に登録できます。
+- **柔軟な検索機能**: 作品名、作家名、タグから素早く検索できます。
+- **お気に入り作家の管理**: 好きな作家の作品をまとめて閲覧できます。
+- **視覚的な貸本管理**: 誰に、いつ、何の本を貸したかが一目でわかります。
+- **おすすめ本の紹介**: あなたの好みに合わせた本をご紹介します。
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
