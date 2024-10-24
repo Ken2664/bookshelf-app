@@ -202,6 +202,14 @@ export default function CameraAddBookPage() {
   }
 
   const compressImage = async (file: File): Promise<File> => {
+    // 入力ファイルの情報をログ出力
+    console.log('圧縮開始:', {
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
+      timestamp: new Date().toISOString()
+    });
+  
     setCompressionStatus({
       stage: '圧縮準備中...',
       progress: 0,
@@ -210,19 +218,24 @@ export default function CameraAddBookPage() {
   
     // 圧縮設定の段階を定義
     const compressionStages = [
-      { maxWidthOrHeight: 1600, quality: 0.8, maxSizeMB: 1.0 },    // Stage 1: 緩やかな圧縮
-      { maxWidthOrHeight: 1200, quality: 0.7, maxSizeMB: 0.75 },   // Stage 2: 中程度の圧縮
-      { maxWidthOrHeight: 800, quality: 0.6, maxSizeMB: 0.5 },     // Stage 3: 強めの圧縮
-      { maxWidthOrHeight: 600, quality: 0.5, maxSizeMB: 0.3 }      // Stage 4: 最大圧縮
+      { maxWidthOrHeight: 1600, quality: 0.8, maxSizeMB: 1.0 },
+      { maxWidthOrHeight: 1200, quality: 0.7, maxSizeMB: 0.75 },
+      { maxWidthOrHeight: 800, quality: 0.6, maxSizeMB: 0.5 },
+      { maxWidthOrHeight: 600, quality: 0.5, maxSizeMB: 0.3 }
     ];
   
-    // 圧縮処理を実行する関数
     const compress = async (inputFile: File, stageIndex: number = 0): Promise<File> => {
       if (stageIndex >= compressionStages.length) {
+        console.warn('全ての圧縮ステージを試行しましたが、目標サイズを達成できませんでした');
         throw new Error('画像の圧縮が要件を満たせませんでした。より小さい画像を使用してください。');
       }
   
       const stage = compressionStages[stageIndex];
+      console.log(`圧縮ステージ ${stageIndex + 1} 開始:`, {
+        maxWidth: stage.maxWidthOrHeight,
+        quality: stage.quality,
+        targetSize: `${stage.maxSizeMB}MB`
+      });
       
       setCompressionStatus(prev => ({
         ...prev,
@@ -231,34 +244,41 @@ export default function CameraAddBookPage() {
       }));
   
       try {
-        // 圧縮オプションを設定
+        // 圧縮前の画像サイズをログ
+        const inputDimensions = await getImageDimensions(inputFile);
+        console.log('圧縮前の画像サイズ:', {
+          width: inputDimensions.width,
+          height: inputDimensions.height,
+          fileSize: `${(inputFile.size / 1024 / 1024).toFixed(2)}MB`
+        });
+  
         const options = {
           maxSizeMB: stage.maxSizeMB,
           maxWidthOrHeight: stage.maxWidthOrHeight,
           useWebWorker: true,
           fileType: 'image/jpeg',
           initialQuality: stage.quality,
-          alwaysKeepResolution: false,
-          signal: new AbortController().signal // 必要に応じて中断可能に
+          alwaysKeepResolution: false
         };
+  
+        console.log('圧縮オプション:', options);
   
         const compressedFile = await imageCompression(inputFile, options);
         
-        // 圧縮結果をログ出力
-        console.log(`圧縮ステージ ${stageIndex + 1}:`, {
+        // 圧縮後の画像サイズをログ
+        const outputDimensions = await getImageDimensions(compressedFile);
+        console.log('圧縮結果:', {
+          ステージ: stageIndex + 1,
           入力サイズ: `${(inputFile.size / 1024 / 1024).toFixed(2)}MB`,
           出力サイズ: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`,
           圧縮率: `${((1 - compressedFile.size / inputFile.size) * 100).toFixed(1)}%`,
-          品質: stage.quality,
-          最大サイズ: `${stage.maxWidthOrHeight}px`
+          入力解像度: `${inputDimensions.width}x${inputDimensions.height}`,
+          出力解像度: `${outputDimensions.width}x${outputDimensions.height}`,
+          品質設定: stage.quality
         });
   
-        // 画像の寸法を取得
-        const dimensions = await getImageDimensions(compressedFile);
-        console.log('圧縮後の画像サイズ:', dimensions);
-  
-        // 目標サイズより大きい場合は次のステージに進む
         if (compressedFile.size > stage.maxSizeMB * 1024 * 1024) {
+          console.log(`目標サイズ(${stage.maxSizeMB}MB)未達成、次のステージに進みます`);
           return compress(inputFile, stageIndex + 1);
         }
   
@@ -271,30 +291,104 @@ export default function CameraAddBookPage() {
   
         return compressedFile;
       } catch (error) {
-        // エラーが発生した場合、次のステージを試行
-        console.warn(`ステージ ${stageIndex + 1} での圧縮に失敗:`, error);
+        console.error(`ステージ ${stageIndex + 1} での圧縮エラー:`, {
+          error,
+          errorMessage: error instanceof Error ? error.message : '不明なエラー',
+          errorStack: error instanceof Error ? error.stack : null,
+          stageConfig: stage
+        });
         return compress(inputFile, stageIndex + 1);
       }
     };
   
-    // 入力ファイルの事前チェック
-    const fileSizeMB = file.size / (1024 * 1024);
-    if (fileSizeMB > 20) {
-      throw new Error('入力ファイルが大きすぎます（最大20MB）');
-    }
-  
     try {
-      // 画像の向きを修正してから圧縮を開始
+      console.log('画像の向き修正を開始');
       const rotatedFile = await getRotatedImage(file);
+      console.log('画像の向き修正完了');
       return await compress(rotatedFile);
     } catch (error) {
-      console.error('画像圧縮エラー:', error);
+      console.error('画像処理エラー:', {
+        error,
+        errorMessage: error instanceof Error ? error.message : '不明なエラー',
+        errorStack: error instanceof Error ? error.stack : null,
+        fileName: file.name,
+        fileSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
+        fileType: file.type
+      });
       setCompressionStatus(prev => ({
         ...prev,
         stage: '圧縮エラー',
         progress: 0
       }));
       throw error;
+    }
+  };
+  
+  // handleFileUploadの修正
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      console.log('ファイルが選択されていません');
+      return;
+    }
+  
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+  
+      console.log('ファイルアップロード開始:', {
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`
+      });
+  
+      // ファイルタイプチェック
+      if (!file.type.startsWith('image/')) {
+        throw new Error('画像ファイルを選択してください');
+      }
+  
+      // 画像を圧縮
+      console.log('圧縮処理開始');
+      const compressedFile = await compressImage(file);
+      console.log('圧縮処理完了:', {
+        originalSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
+        compressedSize: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`
+      });
+  
+      // FileReaderでbase64に変換
+      const reader = new FileReader();
+      reader.onloadstart = () => console.log('FileReader: 読み込み開始');
+      reader.onprogress = (event) => {
+        if (event.lengthComputable) {
+          console.log(`FileReader: 進捗 ${((event.loaded / event.total) * 100).toFixed(1)}%`);
+        }
+      };
+      reader.onloadend = () => {
+        console.log('FileReader: 読み込み完了');
+        const base64String = reader.result as string;
+        setPreviewImage(base64String);
+        handleCapture(base64String);
+      };
+      reader.onerror = (error) => {
+        console.error('FileReaderエラー:', error);
+        setErrorMessage('画像の読み込みに失敗しました');
+        setLoading(false);
+      };
+      
+      console.log('FileReader: base64変換開始');
+      reader.readAsDataURL(compressedFile);
+  
+    } catch (error) {
+      console.error('画像アップロードエラー:', {
+        error,
+        errorMessage: error instanceof Error ? error.message : '不明なエラー',
+        errorStack: error instanceof Error ? error.stack : null,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`
+      });
+      setErrorMessage(error instanceof Error ? error.message : '画像の処理に失敗しました');
+      setLoading(false);
     }
   };
 
@@ -348,61 +442,6 @@ export default function CameraAddBookPage() {
       alert('本の保存に失敗しました。もう一度お試しください。')
     }
   }
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      try {
-        setLoading(true);
-        setErrorMessage(null);
-
-        // ファイルタイプチェック
-        if (!file.type.startsWith('image/')) {
-          throw new Error('画像ファイルを選択してください');
-        }
-
-        console.log('元のファイル:', {
-          size: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
-          type: file.type,
-          name: file.name
-        });
-
-        // 画像の向きを修正
-        const rotatedFile = await getRotatedImage(file);
-        
-        // 画像を圧縮
-        const compressedFile = await compressImage(rotatedFile);
-        
-        console.log('圧縮後のファイル:', {
-          size: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`,
-          type: compressedFile.type,
-          name: compressedFile.name
-        });
-
-        // ファイルサイズの最終チェック
-        if (compressedFile.size > 0.5 * 1024 * 1024) {
-          throw new Error('画像の圧縮に失敗しました。別の画像を試してください。');
-        }
-
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64String = reader.result as string;
-          setPreviewImage(base64String);
-          handleCapture(base64String);
-        };
-        reader.onerror = (error) => {
-          console.error('FileReaderエラー:', error);
-          setErrorMessage('画像の読み込みに失敗しました');
-          setLoading(false);
-        };
-        reader.readAsDataURL(compressedFile);
-      } catch (error) {
-        console.error('画像処理エラー:', error);
-        setErrorMessage(error instanceof Error ? error.message : '画像の処理に失敗しました');
-        setLoading(false);
-      }
-    }
-  };
 
   return (
     <AuthGuard>
