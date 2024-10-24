@@ -88,7 +88,7 @@ export default function CameraAddBookPage() {
       console.error('本の認識に失敗しました:', error)
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data?.error || error.message
-        setErrorMessage(`本の認識に失敗しました: ${typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage)}`)
+        setErrorMessage(`本の認識に失敗しました: ${typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage, null, 2)}`)
       } else if (error instanceof Error) {
         setErrorMessage(`本の認識に失敗しました: ${error.message}`)
       } else {
@@ -177,7 +177,7 @@ export default function CameraAddBookPage() {
           </CardHeader>
           <CardContent>
             {errorMessage && (
-              <div className="text-red-500 mb-4">
+              <div className="text-red-500 mb-4 whitespace-pre-wrap">
                 {errorMessage}
               </div>
             )}
@@ -185,7 +185,7 @@ export default function CameraAddBookPage() {
               <div className="flex space-x-4 mb-4">
                 <Button onClick={() => setCaptureMethod('upload')} variant="outline">
                   <Upload className="mr-2 h-4 w-4" />
-                  画像をアップロード
+                   画像をアップロード
                 </Button>
               </div>
             )}
