@@ -33,110 +33,6 @@ function dataURItoBlob(dataURI: string): Blob {
   return new Blob([ab], { type: mimeString })
 }
 
-async function compressImage(file: File): Promise<File> {
-  const [compressionStatus, setCompressionStatus] = useState<{
-    stage: string;
-    progress: number;
-    originalSize?: string;
-    currentSize?: string;
-  }>({
-    stage: '',
-    progress: 0
-  });
-
-  setCompressionStatus({
-    stage: '圧縮準備中...',
-    progress: 0,
-    originalSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`
-  });
-
-  const initialOptions = {
-    maxSizeMB: 0.5,
-    maxWidthOrHeight: 800,
-    useWebWorker: true,
-    fileType: 'image/jpeg',
-    initialQuality: 0.7,
-    onProgress: (progress: number) => {
-      setCompressionStatus(prev => ({
-        ...prev,
-        progress: Math.round(progress * 33) // 最初の圧縮は0-33%
-      }));
-    }
-  }
-  
-  try {
-    setCompressionStatus(prev => ({
-      ...prev,
-      stage: '初期圧縮中...',
-    }));
-    let compressedFile = await imageCompression(file, initialOptions)
-    
-    if (compressedFile.size > 0.5 * 1024 * 1024) {
-      setCompressionStatus(prev => ({
-        ...prev,
-        stage: '追加圧縮実行中...',
-        progress: 33,
-        currentSize: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`
-      }));
-      
-      const secondaryOptions = {
-        ...initialOptions,
-        maxWidthOrHeight: 600,
-        initialQuality: 0.6,
-        onProgress: (progress: number) => {
-          setCompressionStatus(prev => ({
-            ...prev,
-            progress: 33 + Math.round(progress * 33) // 二次圧縮は33-66%
-          }));
-        }
-      }
-      
-      compressedFile = await imageCompression(compressedFile, secondaryOptions)
-      
-      if (compressedFile.size > 0.5 * 1024 * 1024) {
-        setCompressionStatus(prev => ({
-          ...prev,
-          stage: '最終圧縮実行中...',
-          progress: 66,
-          currentSize: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`
-        }));
-
-        const finalOptions = {
-          ...initialOptions,
-          maxWidthOrHeight: 400,
-          initialQuality: 0.5,
-          onProgress: (progress: number) => {
-            setCompressionStatus(prev => ({
-              ...prev,
-              progress: 66 + Math.round(progress * 34) // 最終圧縮は66-100%
-            }));
-          }
-        }
-        compressedFile = await imageCompression(compressedFile, finalOptions)
-      }
-    }
-
-    setCompressionStatus(prev => ({
-      ...prev,
-      stage: '圧縮完了',
-      progress: 100,
-      currentSize: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`
-    }));
-
-    return new File([compressedFile], file.name, {
-      type: 'image/jpeg',
-      lastModified: Date.now(),
-    })
-  } catch (error) {
-    setCompressionStatus(prev => ({
-      ...prev,
-      stage: '圧縮エラー',
-      progress: 0
-    }));
-    throw error;
-  }
-}
-
 async function getRotatedImage(file: File): Promise<File> {
   return new Promise((resolve, reject) => {
     const img = new window.Image() // ここでwindowを明示的に指定
@@ -332,6 +228,52 @@ export default function CameraAddBookPage() {
         setErrorMessage('画像の処理に失敗しました。もう一度お試しください。')
         setLoading(false)
       }
+    }
+  }
+
+  const compressImage = async (file: File): Promise<File> => {
+    setCompressionStatus({
+      stage: '圧縮準備中...',
+      progress: 0,
+      originalSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`
+    });
+
+    const initialOptions = {
+      maxSizeMB: 0.5,
+      maxWidthOrHeight: 800,
+      useWebWorker: true,
+      fileType: 'image/jpeg',
+      initialQuality: 0.7,
+      onProgress: (progress: number) => {
+        setCompressionStatus(prev => ({
+          ...prev,
+          progress: Math.round(progress * 33)
+        }));
+      }
+    }
+    
+    try {
+      setCompressionStatus(prev => ({
+        ...prev,
+        stage: '初期圧縮中...',
+      }));
+      const compressedFile = await imageCompression(file, initialOptions);
+      
+      setCompressionStatus(prev => ({
+        ...prev,
+        stage: '圧縮完了',
+        progress: 100,
+        currentSize: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`
+      }));
+
+      return compressedFile;
+    } catch (error) {
+      setCompressionStatus(prev => ({
+        ...prev,
+        stage: '圧縮エラー',
+        progress: 0
+      }));
+      throw error;
     }
   }
 
