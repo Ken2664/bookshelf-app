@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Loader2, Upload, Save } from 'lucide-react'
 import imageCompression from 'browser-image-compression'
+import { Progress } from "@/components/ui/progress"
 
 function dataURItoBlob(dataURI: string): Blob {
   const byteString = atob(dataURI.split(',')[1])
@@ -33,60 +34,106 @@ function dataURItoBlob(dataURI: string): Blob {
 }
 
 async function compressImage(file: File): Promise<File> {
-  // 初期圧縮オプション
+  const [compressionStatus, setCompressionStatus] = useState<{
+    stage: string;
+    progress: number;
+    originalSize?: string;
+    currentSize?: string;
+  }>({
+    stage: '',
+    progress: 0
+  });
+
+  setCompressionStatus({
+    stage: '圧縮準備中...',
+    progress: 0,
+    originalSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`
+  });
+
   const initialOptions = {
-    maxSizeMB: 0.5, // 最大サイズを0.5MBに制限
-    maxWidthOrHeight: 800, // 最大幅/高さを800pxに制限
+    maxSizeMB: 0.5,
+    maxWidthOrHeight: 800,
     useWebWorker: true,
     fileType: 'image/jpeg',
-    initialQuality: 0.7, // 初期品質を70%に設定
+    initialQuality: 0.7,
+    onProgress: (progress: number) => {
+      setCompressionStatus(prev => ({
+        ...prev,
+        progress: Math.round(progress * 33) // 最初の圧縮は0-33%
+      }));
+    }
   }
   
   try {
+    setCompressionStatus(prev => ({
+      ...prev,
+      stage: '初期圧縮中...',
+    }));
     let compressedFile = await imageCompression(file, initialOptions)
     
-    // ファイルサイズが0.5MBを超えている場合、さらに圧縮を試みる
     if (compressedFile.size > 0.5 * 1024 * 1024) {
-      console.log('追加圧縮が必要:', {
+      setCompressionStatus(prev => ({
+        ...prev,
+        stage: '追加圧縮実行中...',
+        progress: 33,
         currentSize: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`
-      })
+      }));
       
       const secondaryOptions = {
         ...initialOptions,
-        maxWidthOrHeight: 600, // さらに解像度を下げる
-        initialQuality: 0.6,   // 品質をさらに下げる
+        maxWidthOrHeight: 600,
+        initialQuality: 0.6,
+        onProgress: (progress: number) => {
+          setCompressionStatus(prev => ({
+            ...prev,
+            progress: 33 + Math.round(progress * 33) // 二次圧縮は33-66%
+          }));
+        }
       }
       
       compressedFile = await imageCompression(compressedFile, secondaryOptions)
       
-      // それでもまだ大きい場合は最終手段
       if (compressedFile.size > 0.5 * 1024 * 1024) {
+        setCompressionStatus(prev => ({
+          ...prev,
+          stage: '最終圧縮実行中...',
+          progress: 66,
+          currentSize: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`
+        }));
+
         const finalOptions = {
           ...initialOptions,
           maxWidthOrHeight: 400,
           initialQuality: 0.5,
+          onProgress: (progress: number) => {
+            setCompressionStatus(prev => ({
+              ...prev,
+              progress: 66 + Math.round(progress * 34) // 最終圧縮は66-100%
+            }));
+          }
         }
         compressedFile = await imageCompression(compressedFile, finalOptions)
       }
     }
 
-    console.log('圧縮結果:', {
-      originalSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
-      compressedSize: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`,
-      compressionRatio: `${((1 - compressedFile.size / file.size) * 100).toFixed(1)}%`
-    })
+    setCompressionStatus(prev => ({
+      ...prev,
+      stage: '圧縮完了',
+      progress: 100,
+      currentSize: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`
+    }));
 
     return new File([compressedFile], file.name, {
       type: 'image/jpeg',
       lastModified: Date.now(),
     })
   } catch (error) {
-    console.error('画像圧縮エラー:', {
-      error,
-      originalFileSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
-      originalFileType: file.type
-    })
-    throw new Error('画像の圧縮に失敗しました。')
+    setCompressionStatus(prev => ({
+      ...prev,
+      stage: '圧縮エラー',
+      progress: 0
+    }));
+    throw error;
   }
 }
 
@@ -148,6 +195,15 @@ export default function CameraAddBookPage() {
   const { user } = useAuth()
   const [isMobile, setIsMobile] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [compressionStatus, setCompressionStatus] = useState<{
+    stage: string;
+    progress: number;
+    originalSize?: string;
+    currentSize?: string;
+  }>({
+    stage: '',
+    progress: 0
+  });
 
   useEffect(() => {
     const checkMobile = () => {
@@ -368,8 +424,21 @@ export default function CameraAddBookPage() {
                   onChange={handleFileUpload}
                   className="mb-2"
                 />
+                {compressionStatus.stage && (
+                  <div className="mt-4 space-y-2">
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>{compressionStatus.stage}</span>
+                      {compressionStatus.originalSize && compressionStatus.currentSize && (
+                        <span>
+                          {compressionStatus.originalSize} → {compressionStatus.currentSize}
+                        </span>
+                      )}
+                    </div>
+                    <Progress value={compressionStatus.progress} className="w-full" />
+                  </div>
+                )}
                 {previewImage && (
-                  <div className="mt-2">
+                  <div className="mt-4">
                     <Image src={previewImage} alt="プレビュー" width={200} height={200} />
                   </div>
                 )}
