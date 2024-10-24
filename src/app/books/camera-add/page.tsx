@@ -133,8 +133,8 @@ export default function CameraAddBookPage() {
           setPreviewImage(base64String)
           handleCapture(base64String)
         }
-        reader.onerror = (error) => {
-          console.error('画像の読み込みに失敗しました:', error)
+        reader.onerror = () => {
+          console.error('画像の読み込みに失敗しました')
           setErrorMessage('画像の読み込みに失敗しました。もう一度お試しください。')
           setLoading(false)
         }
