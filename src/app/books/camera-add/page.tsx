@@ -52,7 +52,11 @@ export default function CameraAddBookPage() {
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      setIsMobile(isMobileDevice)
+      if (isMobileDevice) {
+        console.log('モバイルデバイスが検出されました。')
+      }
     }
     checkMobile()
     window.addEventListener('resize', checkMobile)
