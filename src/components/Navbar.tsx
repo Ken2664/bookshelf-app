@@ -68,7 +68,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="text-brown-800 text-xl font-custom font-bold">My Bookshelf</Link>
-          <div className="hidden md:flex items-center space-x-4 font-custom font-bold">
+          <div className="hidden lg:flex items-center space-x-4 font-custom font-bold">
             {navLinks.map((link) => (
               <Button key={link.href} asChild variant="ghost" size="sm">
                 <Link href={link.href}>
@@ -82,7 +82,7 @@ export default function Navbar() {
               ログアウト
             </Button>
           </div>
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <Button variant="ghost" size="icon" onClick={toggleMenu}>
               <Menu className="h-6 w-6" />
             </Button>
@@ -90,13 +90,12 @@ export default function Navbar() {
         </div>
       </div>
       {isMenuOpen && (
-        
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3 }}
-          className="md:hidden absolute top-16 left-0 right-0 bg-amber-50 shadow-lg z-10"
+          className="lg:hidden absolute top-16 left-0 right-0 bg-amber-50 shadow-lg z-10"
         >
           <div className="px-2 pt-2 pb-3 space-y-1">
             {navLinks.map((link) => (
