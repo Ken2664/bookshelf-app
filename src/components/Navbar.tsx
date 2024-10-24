@@ -82,7 +82,7 @@ export default function Navbar() {
               ログアウト
             </Button>
           </div>
-          <div className="xl:hidden">
+          <div className="flex xl:hidden">
             <Button variant="ghost" size="icon" onClick={toggleMenu}>
               <Menu className="h-6 w-6" />
             </Button>
