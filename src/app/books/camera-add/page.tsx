@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Loader2, Upload, Save } from 'lucide-react'
 import imageCompression from 'browser-image-compression'
+import { Buffer } from 'buffer'
 
 function dataURItoBlob(dataURI: string): Blob {
   const byteString = atob(dataURI.split(',')[1])
@@ -34,17 +35,63 @@ function dataURItoBlob(dataURI: string): Blob {
 
 async function compressImage(file: File): Promise<File> {
   const options = {
-    maxSizeMB: 1, // 最大サイズを1MBに設定
-    maxWidthOrHeight: 1024, // 最大幅または高さを1024pxに制限
+    maxSizeMB: 1,
+    maxWidthOrHeight: 1024,
     useWebWorker: true,
+    fileType: 'image/jpeg', // 強制的にJPEGとして保存
+    initialQuality: 0.8,    // 初期品質を80%に設定
   }
+  
   try {
     const compressedFile = await imageCompression(file, options)
-    return compressedFile
+    // 圧縮後のファイル名を元のファイル名に基づいて設定
+    return new File([compressedFile], file.name, {
+      type: 'image/jpeg',
+      lastModified: Date.now(),
+    })
   } catch (error) {
+    console.error('画像圧縮エラー:', error)
     throw new Error('画像の圧縮に失敗しました。')
-    console.error('本の認識に失敗しました:', error)
   }
+}
+
+async function getRotatedImage(file: File): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image() // ここでwindowを明示的に指定
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        reject(new Error('Canvas context not available'))
+        return
+      }
+
+      // 元の画像の向きを保持したまま描画
+      canvas.width = img.width
+      canvas.height = img.height
+      ctx.drawImage(img, 0, 0)
+
+      // Canvas から Blob を作成
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Blob creation failed'))
+            return
+          }
+          // 新しいファイルを作成
+          const rotatedFile = new File([blob], file.name, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          })
+          resolve(rotatedFile)
+        },
+        'image/jpeg',
+        0.95
+      )
+    }
+    img.onerror = () => reject(new Error('Image loading failed'))
+    img.src = URL.createObjectURL(file)
+  })
 }
 
 export default function CameraAddBookPage() {
@@ -128,12 +175,23 @@ export default function CameraAddBookPage() {
         imageBase64Length: `${(imageBase64.length / 1024 / 1024).toFixed(2)}MB`,
         userAgent: navigator.userAgent,
         errorMessage: error instanceof Error ? error.message : 'Unknown error',
-        errorStack: error instanceof Error ? error.stack : null
+        errorStack: error instanceof Error ? error.stack : null,
+        timestamp: new Date().toISOString(),
+        deviceInfo: {
+          platform: navigator.platform,
+          vendor: navigator.vendor,
+          language: navigator.language,
+        }
       })
 
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data?.error || error.message
-        setErrorMessage(`アップロードエラー: ${typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage)}`)
+        const statusCode = error.response?.status
+        setErrorMessage(
+          `アップロードエラー (${statusCode}): ${
+            typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage)
+          }`
+        )
       } else if (error instanceof Error) {
         setErrorMessage(`エラー: ${error.message}`)
       } else {
@@ -149,23 +207,37 @@ export default function CameraAddBookPage() {
     if (file) {
       try {
         setLoading(true)
-        // 画像を圧縮
-        const compressedFile = await compressImage(file)
+        console.log('Original file:', {
+          size: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
+          type: file.type,
+          name: file.name
+        })
+
+        // 画像の向きを修正
+        const rotatedFile = await getRotatedImage(file)
         
+        // 画像を圧縮
+        const compressedFile = await compressImage(rotatedFile)
+        console.log('Compressed file:', {
+          size: `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`,
+          type: compressedFile.type,
+          name: compressedFile.name
+        })
+
         const reader = new FileReader()
         reader.onloadend = () => {
           const base64String = reader.result as string
           setPreviewImage(base64String)
           handleCapture(base64String)
         }
-        reader.onerror = () => {
-          console.error('画像の読み込みに失敗しました')
+        reader.onerror = (error) => {
+          console.error('画像の読み込みエラー:', error)
           setErrorMessage('画像の読み込みに失敗しました。もう一度お試しください。')
           setLoading(false)
         }
         reader.readAsDataURL(compressedFile)
       } catch (error) {
-        console.error('画像の処理に失敗しました:', error)
+        console.error('画像の処理エラー:', error)
         setErrorMessage('画像の処理に失敗しました。もう一度お試しください。')
         setLoading(false)
       }
