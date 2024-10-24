@@ -20,7 +20,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Loader2, Upload, Save } from 'lucide-react'
 import imageCompression from 'browser-image-compression'
-import { Buffer } from 'buffer'
 
 function dataURItoBlob(dataURI: string): Blob {
   const byteString = atob(dataURI.split(',')[1])
