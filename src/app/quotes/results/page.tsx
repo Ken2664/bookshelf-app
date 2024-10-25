@@ -29,46 +29,46 @@ const QuotesResults: React.FC = () => {
       const searchTerm = searchParams.get('term')
 
       if (!searchType || !searchTerm) {
-        setError('検索パラメータが不正です')
+        setError('検索パラメータが不明です')
         setLoading(false)
         return
       }
 
       try {
+        // URLデコードを行う
+        const decodedSearchTerm = decodeURIComponent(searchTerm)
+        
         let query = supabase
           .from('quotes')
           .select('*')
           .eq('user_id', user.id)
 
         if (searchType === 'book_title') {
-          // まず本を検索
           const { data: books, error: bookError } = await supabase
             .from('books')
             .select('id')
-            .ilike('title', `%${searchTerm}%`)
+            .ilike('title', `%${decodedSearchTerm}%`)
             .eq('user_id', user.id)
 
           if (bookError) throw bookError
 
           if (books && books.length > 0) {
-            // 見つかった本のIDで引用を検索
             const bookIds = books.map(book => book.id)
             query = query.in('book_id', bookIds)
           } else {
-            // 本が見つからない場合は空の結果を返す
             setQuotes([])
             setLoading(false)
             return
           }
         } else {
-          // 本以外の検索の場合
-          query = query.ilike(searchType, `%${searchTerm}%`)
+          query = query.ilike(searchType, `%${decodedSearchTerm}%`)
         }
 
         const { data, error: quotesError } = await query
-
+        
         if (quotesError) throw quotesError
 
+        console.log('検索結果:', data) // デバッグ用
         setQuotes(data || [])
       } catch (err) {
         console.error('Error fetching quotes:', err)
