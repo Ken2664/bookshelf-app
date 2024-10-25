@@ -17,11 +17,36 @@ export default function Home() {
   }
 
   const features = [
-    { title: "本の表紙写真からの登録", icon: Book, description: "本の表紙をスキャンするだけで簡単に登録できます。" },
-    { title: "柔軟な検索機能", icon: Search, description: "作品名、作家名、タグから素早く検索できます。" },
-    { title: "お気に入り作家の管理", icon: Heart, description: "好きな作家の作品をまとめて閲覧できます。" },
-    { title: "視覚的な貸本管理", icon: Users, description: "誰に、いつ、何の本を貸したかが一目でわかります。" },
-    { title: "おすすめ本の紹介", icon: BookOpen, description: "あなたの好みに合わせた本をご紹介します。" },
+    { 
+      title: "本の表紙写真からの登録", 
+      icon: Book, 
+      description: "本の表紙をスキャンするだけで簡単に登録できます。",
+      link: "/books/camera-add"
+    },
+    { 
+      title: "柔軟な検索機能", 
+      icon: Search, 
+      description: "作品名、作家名、タグから素早く検索できます。",
+      link: "/books"
+    },
+    { 
+      title: "お気に入り作家の管理", 
+      icon: Heart, 
+      description: "好きな作家の作品をまとめて閲覧できます。",
+      link: "/authors/add"
+    },
+    { 
+      title: "視覚的な貸本管理", 
+      icon: Users, 
+      description: "誰に、いつ、何の本を貸したかが一目でわかります。",
+      link: "/loans"
+    },
+    { 
+      title: "おすすめ本の紹介", 
+      icon: BookOpen, 
+      description: "あなたの好みに合わせた本をご紹介します。",
+      link: "/recommended-books"
+    },
   ]
 
   return (
@@ -50,17 +75,21 @@ export default function Home() {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12">
           {features.map((feature, index) => (
-            <motion.div 
-              key={index}
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 + index * 0.1, duration: 0.6 }}
-              className="flex flex-col items-center p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
-            >
-              <feature.icon className="w-12 h-12 text-brown-600 mb-4" />
-              <h3 className="text-xl font-semibold text-brown-800 mb-2 text-center">{feature.title}</h3>
-              <p className="text-brown-600 text-center">{feature.description}</p>
-            </motion.div>
+            <Link href={feature.link} key={index}>
+              <motion.div 
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 + index * 0.1, duration: 0.6 }}
+                className="flex flex-col items-center p-6 bg-white rounded-lg shadow-md 
+                  hover:shadow-2xl transition-all duration-300 cursor-pointer
+                  hover:-translate-y-2 hover:bg-amber-50/50
+                  transform hover:scale-105"
+              >
+                <feature.icon className="w-12 h-12 text-brown-600 mb-4 transition-transform duration-300 group-hover:scale-110" />
+                <h3 className="text-xl font-semibold text-brown-800 mb-2 text-center">{feature.title}</h3>
+                <p className="text-brown-600 text-center">{feature.description}</p>
+              </motion.div>
+            </Link>
           ))}
         </div>
         
