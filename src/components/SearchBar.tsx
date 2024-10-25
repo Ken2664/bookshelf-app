@@ -98,9 +98,17 @@ const SearchBar: React.FC = () => {
   const handleFavoriteAuthorsSearch = async () => {
     if (favoriteAuthors.length === 0) return
 
-    const authorNames = favoriteAuthors.map(author => author.author_name).join(',')
-    await searchBooks('', authorNames, [])
-    router.push(`/search-results?author=${encodeURIComponent(authorNames)}`)
+    // 各作家名で個別に検索を実行し、結果を結合する
+    try {
+      // 各作家名をクエリパラメータとして追加
+      const authorNames = favoriteAuthors.map(author => author.author_name)
+      await searchBooks('', authorNames.join('|'), []) // '|' を区切り文字として使用してOR検索を表現
+      
+      // クエリパラメータに authors（複数形）を使用し、OR検索用の区切り文字 '|' を含めて渡す
+      router.push(`/search-results?authors=${encodeURIComponent(authorNames.join('|'))}`)
+    } catch (error) {
+      console.error('お気に入り作家の検索中にエラーが発生しました:', error)
+    }
   }
 
   return (
@@ -134,15 +142,10 @@ const SearchBar: React.FC = () => {
                 <Label htmlFor="title">タイトル</Label>
 
                 <Input
-
                   id="title"
-
                   type="text"
-
                   value={title}
-
                   onChange={(e) => setTitle(e.target.value)}
-
                   placeholder="タイトルで検索"
 
                 />
