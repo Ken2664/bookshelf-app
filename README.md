@@ -1,44 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📚 Bookshelf App
 
-## Getting Started
+あなたの本棚を、もっとスマートに。
 
-First, run the development server:
+## 🌟 アプリケーションの特徴
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 簡単登録
+- 📸 本の表紙をスキャンするだけで瞬時に登録
+- 📱 スマートフォンからでもパソコンからでも快適に操作
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 便利な管理機能
+- 🔍 タイトル、著者名、タグなど多彩な検索オプション
+- 👥 貸出管理機能で、貸した本を簡単トラッキング
+- ⭐️ お気に入りの作家や本をコレクション化
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### パーソナライズ機能
+- 📊 読書統計でreading habitを可視化
+- 🎯 おすすめ本の自動レコメンド
+- 🏷 カスタムタグで自分だけの整理方法を作成
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 💫 使い始め方
 
-## Features of Bookshelf App
+1. [Bookshelf App](https://mybookshelf-82yuu52c7-kensukes-projects-5c8479b8.vercel.app/)にアクセス
+2. Googleアカウントで新規登録
+3. 「本を追加」ボタンから最初の1冊を登録してみましょう！
 
-- **本の表紙写真からの登録**: 本の表紙をスキャンするだけで簡単に登録できます。
-- **柔軟な検索機能**: 作品名、作家名、タグから素早く検索できます。
-- **お気に入り作家の管理**: 好きな作家の作品をまとめて閲覧できます。
-- **視覚的な貸本管理**: 誰に、いつ、何の本を貸したかが一目でわかります。
-- **おすすめ本の紹介**: あなたの好みに合わせた本をご紹介します。
+## 📱 対応環境
 
-## Learn More
+- 💻 デスクトップ：Chrome, Firefox, Safari, Edge最新版
+- 📱 モバイル：iOS 13以上、Android 8.0以上
 
-To learn more about Next.js, take a look at the following resources:
+## 🔒 プライバシーとセキュリティ
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- ユーザーデータは暗号化して安全に保管
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+---
+
+Made by Kensuke
