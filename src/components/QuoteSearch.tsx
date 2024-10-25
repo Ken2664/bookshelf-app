@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Database, Quote } from '@/types'
+
+import { Quote } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,7 @@ interface QuoteSearchProps {
   onError: (error: string) => void
 }
 
-const QuoteSearch: React.FC<QuoteSearchProps> = ({ onSearchResults, onError }) => {
+const QuoteSearch: React.FC<QuoteSearchProps> = ({ onError }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [searchType, setSearchType] = useState<'content' | 'author' | 'book_title'>('content')
   const router = useRouter()
