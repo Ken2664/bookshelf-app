@@ -26,6 +26,7 @@ const SearchResults: React.FC = () => {
   const searchParams = useSearchParams()
   const title = searchParams?.get('title') || ''
   const author = searchParams?.get('author') || ''
+  const authors = searchParams?.get('authors') || '' // 複数作家の OR 検索用
   const tagIds = useMemo(() => {
     return searchParams?.get('tags')?.split(',').filter(Boolean) || []
   }, [searchParams]);
@@ -36,10 +37,15 @@ const SearchResults: React.FC = () => {
   const performSearch = useCallback(() => {
     if (user && !authLoading && !hasSearched) {
       const tagObjects = tagIds.map(id => ({ id, name: '', user_id: user.id }))
-      searchBooks(title, author, tagObjects)
+      // authors パラメータが存在する場合は OR 検索を実行
+      if (authors) {
+        searchBooks('', authors, tagObjects)
+      } else {
+        searchBooks(title, author, tagObjects)
+      }
       setHasSearched(true)
     }
-  }, [user, authLoading, hasSearched, searchBooks, title, author, tagIds])
+  }, [user, authLoading, hasSearched, searchBooks, title, author, authors, tagIds])
 
   useEffect(() => {
     performSearch()
@@ -57,6 +63,10 @@ const SearchResults: React.FC = () => {
     const criteria = []
     if (title) criteria.push(`タイトル: "${title}"`)
     if (author) criteria.push(`著者: "${author}"`)
+    if (authors) {
+      const authorList = authors.split('|')
+      criteria.push(`お気に入り作家: ${authorList.join(' または ')}`)
+    }
     if (tagIds.length > 0) {
       const tagNames = tagIds.map(id => {
         const tag = searchResults.find(book => book.book_tags?.some(bt => bt.tag.id === id))?.book_tags?.find(bt => bt.tag.id === id)?.tag.name
@@ -127,7 +137,7 @@ const SearchResults: React.FC = () => {
             </div>
 
             {filteredAndSortedBooks.length === 0 ? (
-              <p className="text-center text-gray-600">該当する本が見つかりませんでした。</p>
+              <p className="text-center text-gray-600">該当する本��見つかりませんでした。</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredAndSortedBooks.map((book) => (
