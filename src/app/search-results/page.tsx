@@ -106,7 +106,7 @@ const SearchResults: React.FC = () => {
       >
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-2xl font-custom text-brown-800">検索結果</CardTitle>
+            <CardTitle className="text-2xl text-brown-800">検索結果</CardTitle>
             <Button asChild variant="outline">
               <Link href="/books">
                 <ArrowLeft className="mr-2 h-4 w-4" />

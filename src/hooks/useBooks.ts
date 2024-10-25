@@ -210,7 +210,9 @@ export const useBooks = () => {
         .select(`
           *,
           book_tags (
-            tag (*)
+            id,
+            tag_id,
+            tag:tags (id, name)
           )
         `)
         .eq('user_id', user?.id)
@@ -225,7 +227,7 @@ export const useBooks = () => {
           // OR検索の場合
           const authorNames = author.split('|')
           query = query.or(
-            authorNames.map(name => `author.ilike.%${name}%`).join(',')
+            authorNames.map(name => `author.ilike.%${name.trim()}%`).join(',')
           )
         } else {
           // 単一著者の検索
