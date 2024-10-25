@@ -28,6 +28,13 @@ const QuotesResults: React.FC = () => {
       const searchType = searchParams.get('type')
       const searchTerm = searchParams.get('term')
 
+      // 検索パラメータのログ追加
+      console.log('検索パラメータ:', {
+        searchType,
+        searchTerm,
+        userId: user.id
+      })
+
       if (!searchType || !searchTerm) {
         setError('検索パラメータが不明です')
         setLoading(false)
@@ -35,43 +42,48 @@ const QuotesResults: React.FC = () => {
       }
 
       try {
-        // URLデコードを行う
         const decodedSearchTerm = decodeURIComponent(searchTerm)
+        console.log('デコード後の検索語:', decodedSearchTerm)  // デコード結果のログ
         
         let query = supabase
           .from('quotes')
           .select('*')
           .eq('user_id', user.id)
 
-        if (searchType === 'book_title') {
-          const { data: books, error: bookError } = await supabase
-            .from('books')
-            .select('id')
-            .ilike('title', `%${decodedSearchTerm}%`)
-            .eq('user_id', user.id)
-
-          if (bookError) throw bookError
-
-          if (books && books.length > 0) {
-            const bookIds = books.map(book => book.id)
-            query = query.in('book_id', bookIds)
-          } else {
-            setQuotes([])
-            setLoading(false)
-            return
-          }
-        } else {
-          query = query.ilike(searchType, `%${decodedSearchTerm}%`)
+        switch (searchType) {
+          case 'content':
+            query = query.ilike('content', `%${decodedSearchTerm}%`)
+            console.log('セリフで検索:', `content ILIKE %${decodedSearchTerm}%`)
+            break
+          case 'author':
+            query = query.ilike('author', `%${decodedSearchTerm}%`)
+            console.log('著者で検索:', `author ILIKE %${decodedSearchTerm}%`)
+            break
+          case 'book_title':
+            query = query.ilike('book_title', `%${decodedSearchTerm}%`)
+            console.log('本のタイトルで検索:', `book_title ILIKE %${decodedSearchTerm}%`)
+            break
+          default:
+            console.error('不正な検索タイプ:', searchType)
+            throw new Error('不正な検索タイプです')
         }
 
         const { data, error: quotesError } = await query
         
-        if (quotesError) throw quotesError
+        if (quotesError) {
+          console.error('Supabaseエラー:', quotesError)  // Supabaseエラーのログ
+          throw quotesError
+        }
 
-        console.log('検索結果:', data) // デバッグ用
+        // 検索結果の詳細ログ
+        console.log('検索結果:', {
+          件数: data?.length || 0,
+          結果: data
+        })
+        
         setQuotes(data || [])
       } catch (err) {
-        console.error('Error fetching quotes:', err)
+        console.error('検索エラー詳細:', err)  // エラー詳細のログ
         setError('引用の検索中にエラーが発生しました')
       } finally {
         setLoading(false)
