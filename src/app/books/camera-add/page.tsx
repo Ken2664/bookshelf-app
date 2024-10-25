@@ -200,13 +200,12 @@ export default function CameraAddBookPage() {
         originalSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`
       });
 
-      // より細かな圧縮ステージを定義
+      // 圧縮ステージを0.5MB以下になるように調整
       const compressionStages = [
-        { maxWidthOrHeight: 2000, quality: 0.9, maxSizeMB: 2.0 },  // 最初は高品質
-        { maxWidthOrHeight: 1600, quality: 0.8, maxSizeMB: 1.0 },
-        { maxWidthOrHeight: 1200, quality: 0.7, maxSizeMB: 0.75 },
+        { maxWidthOrHeight: 1600, quality: 0.8, maxSizeMB: 0.5 },  // 最初のステージ
+        { maxWidthOrHeight: 1200, quality: 0.7, maxSizeMB: 0.5 },
         { maxWidthOrHeight: 800, quality: 0.6, maxSizeMB: 0.5 },
-        { maxWidthOrHeight: 600, quality: 0.5, maxSizeMB: 0.3 }
+        { maxWidthOrHeight: 600, quality: 0.5, maxSizeMB: 0.5 }
       ];
 
       const compress = async (inputFile: File, stageIndex: number = 0): Promise<File> => {
