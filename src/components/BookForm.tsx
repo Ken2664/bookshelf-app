@@ -355,10 +355,4 @@ const BookForm: React.FC = () => {
 
 }
 
-
-
 export default BookForm
-
-
-
-
