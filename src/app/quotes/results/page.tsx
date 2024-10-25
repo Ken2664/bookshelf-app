@@ -41,23 +41,33 @@ const QuotesResults: React.FC = () => {
           .eq('user_id', user.id)
 
         if (searchType === 'book_title') {
-          const { data: bookData } = await supabase
+          // まず本を検索
+          const { data: books, error: bookError } = await supabase
             .from('books')
             .select('id')
-            .eq('title', searchTerm)
+            .ilike('title', `%${searchTerm}%`)
             .eq('user_id', user.id)
-            .single()
 
-          if (bookData) {
-            query = query.eq('book_id', bookData.id)
+          if (bookError) throw bookError
+
+          if (books && books.length > 0) {
+            // 見つかった本のIDで引用を検索
+            const bookIds = books.map(book => book.id)
+            query = query.in('book_id', bookIds)
+          } else {
+            // 本が見つからない場合は空の結果を返す
+            setQuotes([])
+            setLoading(false)
+            return
           }
         } else {
+          // 本以外の検索の場合
           query = query.ilike(searchType, `%${searchTerm}%`)
         }
 
-        const { data, error: supabaseError } = await query
+        const { data, error: quotesError } = await query
 
-        if (supabaseError) throw supabaseError
+        if (quotesError) throw quotesError
 
         setQuotes(data || [])
       } catch (err) {

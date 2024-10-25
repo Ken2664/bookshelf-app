@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search } from 'lucide-react'
+import { useRouter } from 'next/router'
 
 interface QuoteSearchProps {
   onSearchResults: (results: Quote[]) => void
@@ -18,29 +19,23 @@ interface QuoteSearchProps {
 const QuoteSearch: React.FC<QuoteSearchProps> = ({ onSearchResults, onError }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [searchType, setSearchType] = useState<'content' | 'author' | 'book_title'>('content')
-
-  const supabase = createClientComponentClient<Database>()
+  const router = useRouter()
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    let query = supabase.from('quotes').select('*')
-
-    if (searchType === 'book_title') {
-      query = query.eq('book_id', supabase.from('books').select('id').eq('title', searchTerm).single())
-    } else {
-      query = query.ilike(searchType, `%${searchTerm}%`)
-    }
-
-    const { data, error } = await query
-
-    if (error) {
-      console.error('検索エラー:', error)
-      onError(error.message)
+    if (!searchTerm.trim()) {
+      onError('検索キーワードを入力してください')
       return
     }
 
-    onSearchResults(data || [])
+    // 検索パラメータを使用してURLを構築
+    const searchParams = new URLSearchParams({
+      type: searchType,
+      term: searchTerm.trim()
+    })
+
+    router.push(`/quotes/results?${searchParams.toString()}`)
   }
 
   return (
@@ -63,7 +58,10 @@ const QuoteSearch: React.FC<QuoteSearchProps> = ({ onSearchResults, onError }) =
                 placeholder="検索キーワード"
                 className="flex-grow"
               />
-              <Select value={searchType} onValueChange={(value) => setSearchType(value as 'content' | 'author' | 'book_title')}>
+              <Select 
+                value={searchType} 
+                onValueChange={(value) => setSearchType(value as 'content' | 'author' | 'book_title')}
+              >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="検索タイプ" />
                 </SelectTrigger>
