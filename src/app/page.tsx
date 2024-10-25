@@ -102,7 +102,7 @@ export default function Home() {
             transition={{ delay: 1.2, duration: 0.8 }}
             className="text-center"
           >
-            <Link href="/login" className="inline-block bg-gradient-to-r from-brown-600 to-brown-700 text-white px-8 sm:px-12 py-3 sm:py-4 rounded-full text-lg sm:text-xl font-semibold hover:from-brown-700 hover:to-brown-800 transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+            <Link href="/login" className="inline-block bg-gradient-to-r from-brown-600 to-brown-700 text-black px-8 sm:px-12 py-3 sm:py-4 rounded-full text-lg sm:text-xl font-semibold hover:from-brown-700 hover:to-brown-800 transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
               始めましょう
             </Link>
           </motion.div>
