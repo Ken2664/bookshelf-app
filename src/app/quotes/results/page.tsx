@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button"
 import { Loader2, ArrowLeft } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useAuth } from '@/hooks/useAuth'
 
 const QuotesResults: React.FC = () => {
   const [quotes, setQuotes] = useState<Quote[]>([])
@@ -18,37 +19,57 @@ const QuotesResults: React.FC = () => {
   const searchParams = useSearchParams()
   const router = useRouter()
   const supabase = createClientComponentClient()
+  const { user } = useAuth()
 
   useEffect(() => {
     const fetchQuotes = async () => {
-      if (!searchParams) return
+      if (!searchParams || !user) return
 
-      const ids = searchParams.get('ids')
-      if (!ids) {
-        setError('検索パラメータが見つかりません')
+      const searchType = searchParams.get('type')
+      const searchTerm = searchParams.get('term')
+
+      if (!searchType || !searchTerm) {
+        setError('検索パラメータが不正です')
         setLoading(false)
         return
       }
 
       try {
-        const { data, error: supabaseError } = await supabase
+        let query = supabase
           .from('quotes')
           .select('*')
-          .in('id', ids.split(','))
+          .eq('user_id', user.id)
+
+        if (searchType === 'book_title') {
+          const { data: bookData } = await supabase
+            .from('books')
+            .select('id')
+            .eq('title', searchTerm)
+            .eq('user_id', user.id)
+            .single()
+
+          if (bookData) {
+            query = query.eq('book_id', bookData.id)
+          }
+        } else {
+          query = query.ilike(searchType, `%${searchTerm}%`)
+        }
+
+        const { data, error: supabaseError } = await query
 
         if (supabaseError) throw supabaseError
 
         setQuotes(data || [])
       } catch (err) {
         console.error('Error fetching quotes:', err)
-        setError('引用の取得中にエラーが発生しました')
+        setError('引用の検索中にエラーが発生しました')
       } finally {
         setLoading(false)
       }
     }
 
     fetchQuotes()
-  }, [searchParams, supabase])
+  }, [searchParams, supabase, user])
 
   const handleError = (errorMessage: string) => {
     setError(errorMessage)
@@ -75,7 +96,9 @@ const QuotesResults: React.FC = () => {
     >
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-custom text-brown-800">検索結果</CardTitle>
+          <CardTitle className="text-2xl font-custom text-brown-800">
+            検索結果 ({quotes.length}件)
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {error ? (
@@ -98,7 +121,6 @@ const QuotesResults: React.FC = () => {
   )
 }
 
-// 新しいラッパーコンポーネント
 const QuotesResultsPage: React.FC = () => {
   return (
     <Suspense fallback={
