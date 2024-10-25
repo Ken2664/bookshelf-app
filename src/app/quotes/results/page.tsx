@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { Suspense, useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Loader2, ArrowLeft } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
-const QuotesResultsPage: React.FC = () => {
+const QuotesResults: React.FC = () => {
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -95,6 +95,19 @@ const QuotesResultsPage: React.FC = () => {
         </CardFooter>
       </Card>
     </motion.div>
+  )
+}
+
+// 新しいラッパーコンポーネント
+const QuotesResultsPage: React.FC = () => {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-brown-600" />
+      </div>
+    }>
+      <QuotesResults />
+    </Suspense>
   )
 }
 
