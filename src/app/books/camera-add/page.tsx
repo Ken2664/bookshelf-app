@@ -408,7 +408,7 @@ export default function CameraAddBookPage() {
       >
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-custom text-brown-800">画像アップロードで本を追加</CardTitle>
+            <CardTitle className="text-2xl text-brown-800">画像アップロードで本を追加</CardTitle>
           </CardHeader>
           <CardContent>
             {errorMessage && (
