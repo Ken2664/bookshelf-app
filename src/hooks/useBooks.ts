@@ -202,66 +202,59 @@ export const useBooks = () => {
     return null;
   };
 
-  const searchBooks = useCallback(async (title: string, author: string, tags: Tag[]) => {
-    if (!user) {
-      console.error('検索エラー: ユーザーが認証されていません');
-      return;
-    }
-    setLoading(true);
-    console.log(`検索開始: タイトル "${title}", 著者 "${author}", タグ ${tags.map(t => t.name).join(', ')}`);
-
-    let query = supabase
-      .from('books')
-      .select(`
-        *,
-        book_tags!inner (
-          id,
-          tag:tags!inner (id, name)
-        )
-      `)
-      .eq('user_id', user.id);
-
-    if (title) {
-      query = query.ilike('title', `%${title}%`);
-    }
-    if (author) {
-      query = query.ilike('author', `%${author}%`);
-    }
-    if (tags.length > 0) {
-      const tagIds = tags.map(tag => tag.id);
-      query = query.in('book_tags.tag.id', tagIds);
-    }
-
+  const searchBooks = async (title: string, author: string, tags: Tag[]) => {
+    setLoading(true)
     try {
-      const { data, error } = await query.order('title', { ascending: true });
+      let query = supabase
+        .from('books')
+        .select(`
+          *,
+          book_tags (
+            tag (*)
+          )
+        `)
+        .eq('user_id', user?.id)
 
-      if (error) {
-        console.error('本の検索中にエラーが発生しました:', error);
-        throw error;
-      } else if (data) {
-        console.log(`検索結果: ${data.length}件の本が見つかりました`);
-        // タグでフィルタリングされた結果のみを返す
-        const filteredData = tags.length > 0
-          ? data.filter(book => book.book_tags.some((bt: { tag: { id: string } }) => tags.some(t => t.id === bt.tag.id)))
-          : data;
-        
-        // タグの名前を含む形式に変換
-        const booksWithTagNames = filteredData.map(book => ({
-          ...book,
-          tags: book.book_tags.map((bt: { tag: { name: string } }) => bt.tag.name)
-        }));
-        
-        setSearchResults(booksWithTagNames);
-      } else {
-        console.log('検索結果: 本が見つかりませんでした');
-        setSearchResults([]);
+      if (title) {
+        query = query.ilike('title', `%${title}%`)
       }
+
+      // 著者名の OR 検索処理
+      if (author) {
+        if (author.includes('|')) {
+          // OR検索の場合
+          const authorNames = author.split('|')
+          query = query.or(
+            authorNames.map(name => `author.ilike.%${name}%`).join(',')
+          )
+        } else {
+          // 単一著者の検索
+          query = query.ilike('author', `%${author}%`)
+        }
+      }
+
+      if (tags.length > 0) {
+        const { data: bookIdsWithTags } = await supabase
+          .from('book_tags')
+          .select('book_id')
+          .in('tag_id', tags.map(tag => tag.id))
+
+        if (bookIdsWithTags) {
+          query = query.in('id', bookIdsWithTags.map(item => item.book_id))
+        }
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+      setSearchResults(data || [])
     } catch (error) {
-      console.error('検索中に予期せぬエラーが発生しました:', error);
+      console.error('Error searching books:', error)
+      setSearchResults([])
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [user]);
+  };
 
   return {
     books,
