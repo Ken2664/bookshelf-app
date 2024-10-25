@@ -50,7 +50,7 @@ const QuoteSearch: React.FC<QuoteSearchProps> = ({ onError }) => {
     >
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-custom text-brown-800">セリフを検索</CardTitle>
+          <CardTitle className="text-2xl text-brown-800">セリフを検索</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSearch} className="space-y-4">

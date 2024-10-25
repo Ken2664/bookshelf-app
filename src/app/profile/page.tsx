@@ -116,7 +116,7 @@ const ProfilePage: React.FC = () => {
       >
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-custom text-brown-800">プロフィール編集</CardTitle>
+            <CardTitle className="text-2xl text-brown-800">プロフィール編集</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">

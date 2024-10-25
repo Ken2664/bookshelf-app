@@ -119,7 +119,7 @@ const SearchBar: React.FC = () => {
 
         <CardHeader>
 
-          <CardTitle className="text-2xl font-custom text-brown-800">本を検索</CardTitle>
+          <CardTitle className="text-2xl text-brown-800">本を検索</CardTitle>
 
         </CardHeader>
 

@@ -124,7 +124,7 @@ const QuotesPage: React.FC = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-custom text-brown-800">今日のおすすめ</CardTitle>
+            <CardTitle className="text-2xl text-brown-800">今日のおすすめ</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">

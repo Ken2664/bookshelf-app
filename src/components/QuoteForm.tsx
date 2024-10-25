@@ -116,7 +116,7 @@ const QuoteForm: React.FC = () => {
     >
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
-          <CardTitle className="text-2xl font-custom text-brown-800">セリフを登録</CardTitle>
+          <CardTitle className="text-2xl text-brown-800">セリフを登録</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

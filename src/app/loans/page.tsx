@@ -26,7 +26,7 @@ const LoansPage: React.FC = () => {
           >
             <Card>
               <CardHeader>
-                <CardTitle className="text-2xl font-custom text-brown-800 flex items-center">
+                <CardTitle className="text-2xl text-brown-800 flex items-center">
                   <ListPlus className="mr-2 h-6 w-6 text-amber-600" />
                   新しい貸出を記録
                 </CardTitle>
@@ -43,7 +43,7 @@ const LoansPage: React.FC = () => {
           >
             <Card>
               <CardHeader>
-                <CardTitle className="text-2xl font-custom text-brown-800 flex items-center">
+                <CardTitle className="text-2xl text-brown-800 flex items-center">
                   <BookOpen className="mr-2 h-6 w-6 text-amber-600" />
                   貸出リスト
                 </CardTitle>

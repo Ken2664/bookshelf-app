@@ -58,7 +58,7 @@ const LoanList: React.FC = () => {
           >
             <Card>
               <CardHeader>
-                <CardTitle className="text-xl font-custom-yuzu text-brown-800 flex items-center">
+                <CardTitle className="text-xl text-brown-800 flex items-center">
                   <BookOpen className="mr-2 h-5 w-5" />
                   {book?.title || '不明な本'}
                 </CardTitle>
