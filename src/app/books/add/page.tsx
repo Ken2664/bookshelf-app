@@ -17,7 +17,7 @@ export default function AddBookPage() {
       >
         <Card>
           <CardHeader>
-            <CardTitle className="text-3xl font-custom text-brown-800">本を追加</CardTitle>
+            <CardTitle className="text-3xl text-brown-800">本を追加</CardTitle>
           </CardHeader>
           <CardContent>
             <BookForm />

@@ -193,7 +193,7 @@ const BookForm: React.FC = () => {
 
         <CardHeader>
 
-          <CardTitle className="text-2xl font-custom text-brown-800">新しい本を追加</CardTitle>
+          <CardTitle className="text-2xl text-brown-800">新しい本を追加</CardTitle>
 
         </CardHeader>
 
