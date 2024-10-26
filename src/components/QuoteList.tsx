@@ -24,7 +24,8 @@ const QuoteList: React.FC<QuoteListProps> = ({ quotes: initialQuotes, onError })
   const handleDelete = async (id: string) => {
     try {
       await deleteQuote(id);
-    } catch (error) {
+    } catch (err: unknown) {
+      console.error('引用の削除エラー:', err);
       onError('引用の削除中にエラーが発生しました。');
     }
   };

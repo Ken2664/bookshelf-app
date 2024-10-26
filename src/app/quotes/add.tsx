@@ -74,7 +74,10 @@ const QuoteResultsPage: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <QuoteCard quote={quote} />
+                  <QuoteCard 
+                    quote={quote} 
+                    onDelete={() => {}} // または適切な削除ハンドラー関数を渡す
+                  />
                 </motion.div>
               ))}
             </div>

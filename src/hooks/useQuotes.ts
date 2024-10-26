@@ -41,5 +41,17 @@ export const useQuotes = () => {
     }
   };
 
-  return { quotes, loading, deleteQuote };
+  const addQuote = async (quoteData: Omit<Quote, 'id' | 'created_at'>) => {
+    const { data, error } = await supabase
+      .from('quotes')
+      .insert([quoteData])
+      .select()
+      .single();
+
+    if (error) throw error;
+    setQuotes(prev => [...prev, data]);
+    return data;
+  };
+
+  return { quotes, loading, deleteQuote, addQuote };
 };

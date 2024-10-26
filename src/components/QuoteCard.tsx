@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion'
 import { Quote } from '@/types'
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { BookOpen, Trash2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'

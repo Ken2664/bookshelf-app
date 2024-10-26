@@ -77,11 +77,19 @@ const QuoteForm: React.FC = () => {
     setIsLoading(true)
     
     try {
+      // 選択された本のIDを見つける
+      const selectedBook = books.find(book => book.title === formData.book_title)
+      if (!selectedBook) {
+        setError("選択された本が見つかりません")
+        return
+      }
+
       const quoteData = {
         ...formData,
-        book_title: formData.book_title,
-        page_number: formData.page_number ? parseInt(formData.page_number) : null,
+        book_id: selectedBook.id,
+        page_number: formData.page_number ? parseInt(formData.page_number) : undefined,  // nullの代わりにundefinedを使用
         user_id: user.id,
+        updated_at: new Date().toISOString()
       }
 
       const newQuote = await addQuote(quoteData)
