@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion'
 import { Quote } from '@/types'
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { BookOpen } from 'lucide-react'
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { BookOpen, Trash2 } from 'lucide-react'
+import { Button } from "@/components/ui/button"
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 interface QuoteCardProps {
   quote: Quote;
+  onDelete: (id: string) => void;
 }
 
-const QuoteCard: React.FC<QuoteCardProps> = ({ quote }) => {
+const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onDelete }) => {
   const [bookTitle, setBookTitle] = useState<string | null>(null);
   const supabase = createClientComponentClient();
 
@@ -33,6 +35,12 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote }) => {
     fetchBookTitle();
   }, [quote.book_id, supabase]);
 
+  const handleDelete = async () => {
+    if (window.confirm('この引用を削除してもよろしいですか？')) {
+      await onDelete(quote.id);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -40,12 +48,22 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote }) => {
       transition={{ duration: 0.5 }}
     >
       <Card className="overflow-hidden">
-        <CardContent className="pt-4 ">
-          {quote.content && (
-            <p className="text-lg font-bold text-black font-custom-yuzu">
-              &ldquo;{quote.content}&rdquo;
-            </p>
-          )}
+        <CardContent className="pt-4">
+          <div className="flex justify-between items-start">
+            {quote.content && (
+              <p className="text-lg font-bold text-black font-custom-yuzu flex-1 pr-4">
+                &ldquo;{quote.content}&rdquo;
+              </p>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleDelete}
+              className="text-red-500 hover:text-red-700 flex-shrink-0"
+            >
+              <Trash2 className="h-5 w-5" />
+            </Button>
+          </div>
         </CardContent>
         <CardFooter className="bg-amber-50 text-brown-800 h-[45px] flex flex-col justify-center font-custom-yuzu">
           <div className="flex items-center justify-end w-full mt-5">

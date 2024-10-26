@@ -53,6 +53,19 @@ const QuotesPage: React.FC = () => {
     router.push(`/quotes/results?ids=${query}`)
   }
 
+  const handleDelete = async (quoteId: string) => {
+    const { error } = await supabase
+      .from('quotes')
+      .delete()
+      .eq('id', quoteId)
+    
+    if (error) {
+      handleError(error.message)
+    } else {
+      setRandomQuotes(randomQuotes.filter(quote => quote.id !== quoteId))
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -130,7 +143,11 @@ const QuotesPage: React.FC = () => {
             <div className="space-y-4">
               {randomQuotes.length > 0 ? (
                 randomQuotes.map((quote) => (
-                  <QuoteCard key={quote.id} quote={quote} />
+                  <QuoteCard 
+                    key={quote.id} 
+                    quote={quote} 
+                    onDelete={handleDelete}
+                  />
                 ))
               ) : (
                 <p className="text-center text-gray-500">表示できる引用がありません</p>
