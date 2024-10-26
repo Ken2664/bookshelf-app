@@ -35,7 +35,7 @@ const QuotesPage: React.FC = () => {
           handleError(error.message)
         } else if (data) {
           const shuffled = data.sort(() => 0.5 - Math.random())
-          setRandomQuotes(shuffled.slice(0, 5))
+          setRandomQuotes(shuffled.slice(0, 3))
         }
       }
     }
@@ -124,13 +124,17 @@ const QuotesPage: React.FC = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl text-brown-800">今日のおすすめ</CardTitle>
+            <CardTitle className="text-2xl text-brown-800">今日のピックアップ</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {randomQuotes.map((quote) => (
-                <QuoteCard key={quote.id} quote={quote} />
-              ))}
+              {randomQuotes.length > 0 ? (
+                randomQuotes.map((quote) => (
+                  <QuoteCard key={quote.id} quote={quote} />
+                ))
+              ) : (
+                <p className="text-center text-gray-500">表示できる引用がありません</p>
+              )}
             </div>
           </CardContent>
         </Card>

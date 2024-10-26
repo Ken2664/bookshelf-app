@@ -42,7 +42,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote }) => {
       <Card className="overflow-hidden">
         <CardContent className="pt-4 ">
           {quote.content && (
-            <p className="text-sm text-gray-500 font-custom-yuzu">
+            <p className="text-lg font-bold text-black font-custom-yuzu">
               &ldquo;{quote.content}&rdquo;
             </p>
           )}

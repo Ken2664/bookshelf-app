@@ -6,17 +6,23 @@ import { useLoans } from '@/hooks/useLoans'
 import { useBooks } from '@/hooks/useBooks'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { BookOpen, User, Calendar, CheckCircle } from 'lucide-react'
+import { BookOpen, User, Calendar, CheckCircle, Trash2 } from 'lucide-react'
 import { Input } from "@/components/ui/input"
 
 const LoanList: React.FC = () => {
-  const { loans, loading, updateLoan } = useLoans()
+  const { loans, loading, updateLoan, deleteLoan } = useLoans()
   const { books } = useBooks()
   const [searchTerm, setSearchTerm] = useState('')
 
   const handleReturn = async (id: string) => {
     const returnDate = new Date().toISOString().split('T')[0]
     await updateLoan(id, returnDate)
+  }
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('この貸出記録を削除してもよろしいですか？')) {
+      await deleteLoan(id)
+    }
   }
 
   const filteredLoans = loans.filter(loan => {
@@ -58,9 +64,21 @@ const LoanList: React.FC = () => {
           >
             <Card>
               <CardHeader>
-                <CardTitle className="text-xl text-brown-800 flex items-center">
-                  <BookOpen className="mr-2 h-5 w-5" />
-                  {book?.title || '不明な本'}
+                <CardTitle className="text-xl text-brown-800 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <BookOpen className="mr-2 h-5 w-5" />
+                    {book?.title || '不明な本'}
+                  </div>
+                  {loan.return_date && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(loan.id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>

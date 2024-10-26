@@ -57,5 +57,21 @@ export const useLoans = () => {
     }
   };
 
-  return { loans, loading, addLoan, updateLoan };
+  const deleteLoan = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('loans')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setLoans(loans.filter(loan => loan.id !== id));
+    } catch (error) {
+      console.error('Error deleting loan:', error);
+      throw error;
+    }
+  };
+
+  return { loans, loading, addLoan, updateLoan, deleteLoan };
 };
